@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+use Database\Migration\BaseMigration;
+use Database\Schema\Schema;
+use Database\Schema\SchemaBuilder;
+
+class {{ class }} extends BaseMigration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('{{ table }}', function (SchemaBuilder $table) {
+            // $table->string('new_column')->after('existing_column');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('{{ table }}', function ($table) {
+            // $table->dropColumn('new_column');
+        });
+    }
+}

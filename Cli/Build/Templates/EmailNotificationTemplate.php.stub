@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Notifications\Email;
+
+use App\Core\BaseEmailNotification;
+use Mail\Core\EmailComponent;
+
+class {notificationName} extends BaseEmailNotification
+{
+    /**
+     * Get the recipients for the email (can include 'to', 'cc', 'bcc', 'reply_to').
+     */
+    public function getRecipients(): array
+    {
+        return [
+            'to' => [
+                $this->payload->get('email') => $this->payload->get('name'),
+            ],
+        ];
+    }
+
+    /**
+     * The bold text seen in the email client inbox.
+     */
+    public function getSubject(): string
+    {
+        return '{subject}';
+    }
+
+    /**
+     * The snippet of text seen after the subject in the email client inbox.
+     */
+    public function getPreheader(): ?string
+    {
+        return '{preheader_summary}';
+    }
+
+    /**
+     * The H1 heading inside the email body template.
+     */
+    public function getTitle(): string
+    {
+        return '{inner_body_title}';
+    }
+
+    /**
+     * The actual content of the email built using the EmailComponent.
+     */
+    public function getRawMessageContent(): string
+    {
+        return EmailComponent::make(false)
+            ->greeting('Hello ' . $this->payload->get('name') . ',')
+            ->line('Thank you for signing up with us.')
+            ->action('Action Button', url('/'))
+            ->line('We are excited to have you on board!')
+            ->render();
+    }
+}

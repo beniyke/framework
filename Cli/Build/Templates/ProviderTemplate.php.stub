@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Providers;
+
+use App\Core\BaseServiceProvider;
+// use App\Core\BaseDeferredServiceProvider;
+
+class {providername} extends BaseServiceProvider
+{
+    // public function provides(): array
+    // {
+    //     return [];
+    // }
+
+    public function register(): void
+    {
+        
+    }
+}

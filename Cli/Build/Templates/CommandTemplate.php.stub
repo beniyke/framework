@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Commands;
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle; 
+use Exception;
+
+class {commandname} extends Command 
+{
+	protected function configure(): void 
+	{
+		$this->addArgument('{input}', InputArgument::REQUIRED, '{input label}.')
+			->setName('{command-name}')
+			->setDescription('{description}')
+			->setHelp("{help}");
+	}
+
+	protected function execute( InputInterface $input, OutputInterface $output ): int 
+	{
+        $io = new SymfonyStyle($input, $output);
+        
+        $inputValue = $input->getArgument('{input}');
+
+        $io->title('Executing Command: {command-name}');
+        $io->note(sprintf('Processing input: "%s"', $inputValue));
+
+		try {
+			
+			$build = [
+                'status' => true, // Example status
+                'message' => 'Operation successful for ' . $inputValue,
+                'path' => '/path/to/generated/file',
+            ];
+            
+            
+            if ($build['status']) {
+                $io->success($build['message']);
+                
+                if (isset($build['path'])) {
+                    $io->definitionList([
+                        'Result' => 'SUCCESS',
+                        'Input Value' => $inputValue,
+                        'File Path' => $build['path'],
+                    ]);
+                }
+            } else {
+                $io->error($build['message']);
+            }
+
+			return self::SUCCESS;
+
+		} catch ( Exception $e ) {
+			$io->error('A fatal error occurred: ' . $e->getMessage());
+
+			return self::FAILURE;
+		}
+	}
+}

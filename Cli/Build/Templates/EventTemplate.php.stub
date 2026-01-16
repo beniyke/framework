@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {filenamespace};
+
+class {classname}
+{
+    public function __construct()
+    {
+    }
+}

@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Resources;
+
+use App\Core\BaseResource;
+
+class {resourcename} extends BaseResource
+{
+    public function toArray(): array
+    {
+        return [];
+    }
+}

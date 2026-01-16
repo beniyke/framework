@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Requests;
+
+use App\Core\BaseRequest;
+
+class {requestname} extends BaseRequest
+{
+
+}

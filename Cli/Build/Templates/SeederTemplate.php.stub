@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+use Database\Migration\BaseSeeder;
+
+class {{ class }} extends BaseSeeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Insert seed data here
+        // Example:
+        // $this->connection->table('users')->insert([
+        //     'name' => 'John Doe',
+        //     'email' => 'john@example.com',
+        //     'created_at' => date('Y-m-d H:i:s'),
+        //     'updated_at' => date('Y-m-d H:i:s'),
+        // ]);
+        
+        // Or call other seeders:
+        // $this->call([
+        //     'UsersTableSeeder',
+        //     'PostsTableSeeder',
+        // ]);
+    }
+}

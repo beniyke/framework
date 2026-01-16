@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Views\Models;
+
+readonly class {modelname}
+{
+
+}

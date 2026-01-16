@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Anchor Framework
+ *
+ * Exception interface for the container.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
+namespace Core\Ioc;
+
+use Throwable;
+
+interface ContainerExceptionInterface extends Throwable
+{
+}

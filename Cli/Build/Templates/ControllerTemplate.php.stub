@@ -1,0 +1,116 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Controllers;
+
+use App\Core\BaseController;
+use Helpers\Http\Response;
+use {namespace}\Validations\Form\{requestValidationName};
+
+class {controllername} extends BaseController
+{
+    public function index(): Response
+    {
+        return $this->asView('{list-template}');
+    }
+
+    public function create(): Response
+    {
+        return $this->asView('{create-template}');
+    }
+
+    public function edit(): Response
+    {
+        return $this->asView('{edit-template}');
+    }
+
+    public function delete(): Response
+    {
+        return $this->asView('{delete-template}');
+    }
+
+    /**
+     * Store a new resource.
+     */
+    public function store({requestValidationName} $validator): Response
+    {
+        if (!$this->request->isPut()) {
+            return $this->response->redirect($this->request->callback());
+        }
+
+        $formdata = $this->request->post();
+        $validator->validate($formdata);
+
+        if ($validator->has_error()) {
+            $this->flash->error($validator->errors());
+            return $this->response->redirect($this->request->callback());
+        }
+
+        $request = $validator->getRequest();
+
+        // Continue with your logic: Interaction with the model to create the resource.
+        $created = true; // Simulated operation result.
+
+        if (!$created) {
+            $this->flash->error('{controller-identifier} could not be created.');
+            return $this->response->redirect($this->request->callback());
+        }
+
+        $this->flash->success('{controller-identifier} successfully created.');
+        return $this->response->redirect($this->request->fullRoute());
+    }
+
+    /**
+     * Update an existing resource.
+     */
+    public function update({requestValidationName} $validator): Response
+    {
+        if (!$this->request->isPatch()) {
+            return $this->response->redirect($this->request->callback());
+        }
+
+        $formdata = $this->request->post();
+        $validator->validate($formdata);
+
+        if ($validator->has_error()) {
+            $this->flash->error($validator->errors());
+            return $this->response->redirect($this->request->callback());
+        }
+
+        $request = $validator->getRequest();
+
+        // Continue with your logic: Interaction with the model to update the resource.
+        $updated = true; // Simulated operation result.
+
+        if (!$updated) {
+            $this->flash->error('{controller-identifier} could not be updated.');
+            return $this->response->redirect($this->request->callback());
+        }
+
+        $this->flash->success('{controller-identifier} successfully updated.');
+        return $this->response->redirect($this->request->fullRoute());
+    }
+
+    /**
+     * Destroy a resource.
+     */
+    public function destroy(): Response
+    {
+        if (!$this->request->isDelete()) {
+            return $this->response->redirect($this->request->callback());
+        }
+
+        // Continue with your logic: Interaction with the model to delete the resource.
+        $deleted = true; // Simulated operation result.
+
+        if (!$deleted) {
+            $this->flash->error('{controller-identifier} could not be deleted.');
+            return $this->response->redirect($this->request->callback());
+        }
+
+        $this->flash->success('{controller-identifier} successfully deleted.');
+        return $this->response->redirect($this->request->fullRoute());
+    }
+}
+

@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Actions;
+
+use Helpers\Data;
+
+class {actionname}
+{
+    public function execute(Data $payload): mixed
+    {
+
+    }
+}

@@ -1,0 +1,81 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Class {taskname} handles the execution of a specific task and provides
+ * feedback messages on success or failure.
+ */
+namespace {namespace}\Tasks;
+
+use Queue\BaseTask;
+use Queue\Scheduler;
+
+class {taskname} extends BaseTask
+{
+    /**
+     * Defines the occurrence frequency of the task.
+     *
+     * @return string Task occurrence frequency: once() or always()
+     */
+    public function occurrence(): string
+    {
+        return self::once();
+    }
+
+    /**
+     * Defines the scheduling period for the task.
+     *
+     * @return Scheduler Configured Scheduler instance.
+     */
+    public function period(Scheduler $schedule): Scheduler
+    {
+        /**
+         * Defines the scheduling period for the task. 
+         * It can be day, minute, month, year, hour, etc. 
+         * For example, the following sets a 1-minute interval.
+         */
+        return $schedule->minute(1);
+    }
+
+    /**
+     * Provides a success message when the task is executed successfully.
+     *
+     * @return string Success message.
+     */
+    protected function successMessage(): string
+    {
+        return 'Task successfully executed.';
+    }
+
+    /**
+     * Provides a failure message when the task fails to execute.
+     *
+     * @return string Failure message.
+     */
+    protected function failedMessage(): string
+    {
+        return 'Task execution failed.';
+    }
+
+    /**
+     * Defines the task logic using the payload passed in the constructor.
+     * This is where you implement the core functionality of the task.
+     * 
+     * The $payload, passed during instantiation, can be accessed via 
+     * $this->payload in this method.
+     *
+     * @return bool True if the task succeeds, false otherwise.
+     */
+    protected function execute(): bool
+    {
+        // Use $this->payload for task logic
+        if ($this->payload) {
+            // Example logic using the payload
+            // e.g., process data or perform some operations
+            return true; // Return true for success
+        }
+
+        return false; // Return false for failure
+    }
+}

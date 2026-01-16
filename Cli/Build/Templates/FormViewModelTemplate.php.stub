@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Views\Models;
+
+use Helpers\Http\Flash;
+
+readonly class {modelname}
+{
+
+    public function __construct(protected Flash $flash)
+    {}
+
+    public function getFormActionUrl(): string
+    {
+        return '';
+    }
+
+    public function hasError(string $field): bool
+    {
+        return $this->flash->hasInputError($field);
+    }
+
+    public function getErrorClass(string $field): string
+    {
+        return $this->hasError($field) ? 'is-invalid' : '';
+    }
+
+    public function getFieldValue(string $field): string
+    {
+        return $this->flash->old($field) ?? '';
+    }
+}
