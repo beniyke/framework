@@ -38,35 +38,35 @@ class Scheduler
 
     public function minute(int $minute = 1): self
     {
-        $this->date = $this->date->addMinutes($minute);
+        $this->date = DateTimeHelper::instance($this->date->addMinutes($minute));
 
         return $this;
     }
 
     public function day(int $day = 1): self
     {
-        $this->date = $this->date->addDays($day);
+        $this->date = DateTimeHelper::instance($this->date->addDays($day));
 
         return $this;
     }
 
     public function week(int $week = 1): self
     {
-        $this->date = $this->date->addWeeks($week);
+        $this->date = DateTimeHelper::instance($this->date->addWeeks($week));
 
         return $this;
     }
 
     public function month(int $month = 1): self
     {
-        $this->date = $this->date->addMonths($month);
+        $this->date = DateTimeHelper::instance($this->date->addMonths($month));
 
         return $this;
     }
 
     public function year(int $year = 1): self
     {
-        $this->date = $this->date->addYears($year);
+        $this->date = DateTimeHelper::instance($this->date->addYears($year));
 
         return $this;
     }
@@ -100,7 +100,7 @@ class Scheduler
             throw new InvalidArgumentException('Second must be between 0 and 59');
         }
 
-        $this->date = $this->date->setTime($hour, $minute, $second);
+        $this->date = DateTimeHelper::instance($this->date->setTime($hour, $minute, $second));
 
         return $this;
     }

@@ -15,7 +15,8 @@ trait HasRefid
     {
         static::creating(function ($model) {
             if (empty($model->refid)) {
-                $model->refid = Str::refid();
+                $prefix = property_exists($model, 'refidPrefix') ? $model->refidPrefix : '';
+                $model->refid = $prefix . Str::refid();
             }
         });
     }

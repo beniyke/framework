@@ -240,29 +240,31 @@ class Migrator
         }
 
         $filePath = $this->migrationMap[$file];
-        require_once $filePath;
 
+        // Calculate the expected class name from the filename
         $className = preg_replace('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '', $file);
         $className = str_replace(['_', '-'], ' ', $className);
         $className = ucwords($className);
         $className = str_replace(' ', '', $className);
 
-        if (class_exists($className)) {
-            $instance = new $className();
-        } else {
-            $namespace = $this->getNamespace($filePath);
-            $fullClassName = $namespace ? "{$namespace}\\{$className}" : $className;
+        // Determine the full class name (including namespace) by inspecting the file content
+        $namespace = $this->getNamespace($filePath);
+        $fullClassName = $namespace ? "{$namespace}\\{$className}" : $className;
 
-            if (! class_exists($fullClassName)) {
-                throw new RuntimeException("Migration class {$className} could not be resolved from file {$file}.php.");
-            }
+        // Only require the file if the class is not already defined.
+        // This prevents fatal errors if the migration file is duplicated (e.g. in both System and App).
+        if (! class_exists($fullClassName)) {
+            require_once $filePath;
+        }
 
+        if (class_exists($fullClassName)) {
             $instance = new $fullClassName();
-            $className = $fullClassName;
+        } else {
+            throw new RuntimeException("Migration class {$fullClassName} could not be resolved from file {$filePath}.");
         }
 
         if (! $instance instanceof BaseMigration) {
-            throw new RuntimeException("Migration class {$className} must extend Database\Migration\BaseMigration.");
+            throw new RuntimeException("Migration class {$fullClassName} must extend Database\Migration\BaseMigration.");
         }
 
         return $instance;

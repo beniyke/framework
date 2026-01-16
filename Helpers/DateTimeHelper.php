@@ -10,6 +10,33 @@ declare(strict_types=1);
  * It prioritizes safety, readability, and maintenance.
  *
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ *
+ * @method static DateTimeHelper|static parse($time = null, $tz = null)
+ * @method        DateTimeHelper|static addMinutes(int $value = 1)
+ * @method        DateTimeHelper|static addHours(int $value = 1)
+ * @method        DateTimeHelper|static addDays(int $value = 1)
+ * @method        DateTimeHelper|static addWeeks(int $value = 1)
+ * @method        DateTimeHelper|static addMonths(int $value = 1)
+ * @method        DateTimeHelper|static addYears(int $value = 1)
+ * @method        DateTimeHelper|static subMinutes(int $value = 1)
+ * @method        DateTimeHelper|static subHours(int $value = 1)
+ * @method        DateTimeHelper|static subDays(int $value = 1)
+ * @method        DateTimeHelper|static subWeeks(int $value = 1)
+ * @method        DateTimeHelper|static subMonths(int $value = 1)
+ * @method        DateTimeHelper|static subYears(int $value = 1)
+ * @method        DateTimeHelper|static setTime(int $hour, int $minute, int $second = 0, int $microseconds = 0)
+ * @method        DateTimeHelper|static setHour(int $value)
+ * @method        DateTimeHelper|static setMinute(int $value)
+ * @method        DateTimeHelper|static setSecond(int $value)
+ * @method        DateTimeHelper|static startOfDay()
+ * @method        DateTimeHelper|static endOfDay()
+ * @method        DateTimeHelper|static startOfWeek()
+ * @method        DateTimeHelper|static endOfWeek()
+ * @method        DateTimeHelper|static startOfMonth()
+ * @method        DateTimeHelper|static endOfMonth()
+ * @method        DateTimeHelper|static startOfYear()
+ * @method        DateTimeHelper|static endOfYear()
+ * @method        DateTimeHelper|static setTimezone($value)
  */
 
 namespace Helpers;
