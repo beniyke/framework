@@ -14,7 +14,7 @@ use ZipArchive;
  */
 class HydrationService
 {
-    private const GITHUB_API_URL = "https://api.github.com/repos/anchor/anchor/releases/latest";
+    private const GITHUB_API_URL = "https://api.github.com/repos/beniyke/anchor/releases/latest";
     private const USER_AGENT = "Anchor-Framework-Hydrator";
 
     private Curl $http;

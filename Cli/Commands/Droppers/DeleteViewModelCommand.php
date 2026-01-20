@@ -26,15 +26,15 @@ class DeleteViewModelCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('modelname', InputArgument::REQUIRED, 'Name Of The View Model(s) to be deleted (comma-separated).')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to delete The View Model from.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to delete The View Model from.')
             ->setName('view:delete-model')
             ->setDescription('Deletes specific view model(s).')
-            ->setHelp('This command allows you to delete a specified view model...');
+            ->setHelp('This command allows you to delete a specified view model...' . PHP_EOL . 'Note: To delete a view model from a module, first enter the name of the view model(s), add a space, then the name of the module. Use commas to delete multiple models. Omitting the module will attempt to delete global view models from "App/Views/Models".');
     }
 
     protected function deleteViewModelConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified View Model(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified View Model(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,11 @@ class DeleteViewModelCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('View Model Deletion');
-        $io->note(sprintf('Attempting to delete View Model(s) "%s" from module "%s".', $viewModelNamesInput, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete View Model(s) "%s"%s.',
+            $viewModelNamesInput,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteViewModelConfirmation();
@@ -64,15 +68,15 @@ class DeleteViewModelCommand extends Command
                 foreach ($view_models as $view_model) {
                     $view_model = trim($view_model);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $view_model));
+                    $io->text(sprintf('   Attempting to delete: %s', $view_model));
 
                     $build = $dropper->view_model(strtolower($view_model), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $view_model, $build['message']];
+                        $rows[] = ['✓', $view_model, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $view_model, $build['message']];
+                        $rows[] = ['✗', $view_model, $build['message']];
                         $failureCount++;
                     }
                 }
@@ -85,7 +89,10 @@ class DeleteViewModelCommand extends Command
                     return Command::FAILURE;
                 }
 
-                $io->success(sprintf('All specified View Models were successfully deleted from the "%s" module.', $moduleName));
+                $io->success(sprintf(
+                    'All specified View Models were successfully deleted%s.',
+                    $moduleName ? ' from the "' . $moduleName . '" module' : ' (global)'
+                ));
             } else {
                 $io->comment('Operation cancelled by user. No View Models were deleted.');
             }

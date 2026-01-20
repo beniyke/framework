@@ -17,7 +17,7 @@ use Helpers\File\Paths;
 
 trait GenerateValidationTrait
 {
-    public function requestValidation(string $request_validation, string $module, string $validation_type): array
+    public function requestValidation(string $request_validation, string $validation_type, ?string $module = null): array
     {
         $default_template_path = Paths::cliPath('Build/Templates/');
         $custom_template_path = Paths::storagePath('build/');
@@ -25,15 +25,20 @@ trait GenerateValidationTrait
         $template = 'RequestValidationTemplate.php.stub';
         $param = "'" . strtolower($request_validation) . "'";
 
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
-        $namespace = 'App\\' . $module_name;
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+            $namespace = 'App\\' . $module_name;
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists($directory)) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath();
+            $namespace = 'App';
         }
 
         $custom_template = $custom_template_path . $template;

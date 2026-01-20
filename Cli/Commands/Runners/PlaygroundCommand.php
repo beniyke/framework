@@ -52,7 +52,7 @@ class PlaygroundCommand extends Command
             $config = $container->get(ConfigServiceInterface::class);
 
             $psyConfig = new Configuration([
-                'startupMessage' => $config->get('playground.startup_message', '<info>Playground - Type "exit" to quit</info>'),
+                'startupMessage' => $config->get('playground.startup_message', 'Playground - Type "exit" to quit'),
                 'historyFile' => $config->get('playground.history_file', 'App/storage/playground_history'),
             ]);
 
@@ -98,7 +98,7 @@ class PlaygroundCommand extends Command
     private function runInteractiveMode(Shell $shell, SymfonyStyle $io): int
     {
         $io->section('Interactive Shell Started');
-        $io->text('<info>Entering Psy Shell. Type "exit" to quit.</info>');
+        $io->text('Entering Psy Shell. Type "exit" to quit.');
         $shell->run();
 
         return self::SUCCESS;

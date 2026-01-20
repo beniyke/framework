@@ -85,9 +85,12 @@ class DevSetupCommand extends Command
                 }
 
                 if ($this->worker_process && ! $this->worker_process->isRunning()) {
-                    $io->warning('Worker process stopped unexpectedly.');
+                    $io->warning('Worker process stopped unexpectedly! Exit Code: ' . $this->worker_process->getExitCode());
                     if ($error = $this->worker_process->getErrorOutput()) {
                         $io->block($error, 'WORKER ERROR', 'fg=white;bg=red', ' ', true);
+                    }
+                    if ($output = $this->worker_process->getIncrementalOutput()) {
+                        $io->block($output, 'WORKER OUTPUT', 'fg=white;bg=blue', ' ', true);
                     }
 
                     $io->text('Restarting worker process...');
@@ -141,7 +144,7 @@ class DevSetupCommand extends Command
         $this->server_process->start();
 
         if ($this->server_process->isRunning()) {
-            $io->success(sprintf('PHP server running at <info>http://%s</info>', $appHost));
+            $io->success(sprintf('PHP server running at http://%s', $appHost));
         } else {
             $io->error('Failed to start PHP server.');
         }
@@ -169,14 +172,14 @@ class DevSetupCommand extends Command
 
         if ($this->server_process && $this->server_process->isRunning()) {
             $this->server_process->stop($timeout);
-            $status = $this->server_process->isRunning() ? '<fg=red>forcefully killed</>' : '<fg=green>stopped gracefully</>';
+            $status = $this->server_process->isRunning() ? 'forcefully killed' : 'stopped gracefully';
             $io->text("PHP Server {$status}.");
             $this->server_process = null;
         }
 
         if ($this->worker_process && $this->worker_process->isRunning()) {
             $this->worker_process->stop($timeout);
-            $status = $this->worker_process->isRunning() ? '<fg=red>forcefully killed</>' : '<fg=green>stopped gracefully</>';
+            $status = $this->worker_process->isRunning() ? 'forcefully killed' : 'stopped gracefully';
             $io->text("PHP Worker {$status}.");
             $this->worker_process = null;
         }

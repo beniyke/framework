@@ -26,15 +26,15 @@ class DeleteServiceCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('service_name', InputArgument::REQUIRED, 'Name Of the Service(s) to be Deleted (comma-separated).')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Delete the Service from.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Delete the Service from.')
             ->setName('service:delete')
             ->setDescription('Deletes Existing Service(s).')
-            ->setHelp('This command allows you to delete an existing Service...' . PHP_EOL . 'Note: To delete a Service from a module, first enter the name of the Service(s), add a space, then the name of the module e.g. login account. Use commas to delete multiple services.');
+            ->setHelp('This command allows you to delete an existing Service...' . PHP_EOL . 'Note: To delete a Service from a module, first enter the name of the Service(s), add a space, then the name of the module e.g. login account. Use commas to delete multiple services. Omitting the module will attempt to delete global services from "App/Services".');
     }
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified Service(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified Service(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,11 @@ class DeleteServiceCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Service Deletion');
-        $io->note(sprintf('Attempting to delete service(s) "%s" from module "%s".', $serviceNamesInput, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete service(s) "%s"%s.',
+            $serviceNamesInput,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteConfirmation();
@@ -63,15 +67,15 @@ class DeleteServiceCommand extends Command
                 foreach ($services_name as $service_name) {
                     $service_name = trim($service_name);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $service_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $service_name));
 
                     $build = $dropper->service(strtolower($service_name), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $service_name, $build['message']];
+                        $rows[] = ['✓', $service_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $service_name, $build['message']];
+                        $rows[] = ['✗', $service_name, $build['message']];
                         $failureCount++;
                     }
                 }
@@ -84,7 +88,10 @@ class DeleteServiceCommand extends Command
                     return Command::FAILURE;
                 }
 
-                $io->success(sprintf('All specified services were successfully deleted from the "%s" module.', $moduleName));
+                $io->success(sprintf(
+                    'All specified services were successfully deleted%s.',
+                    $moduleName ? ' from the "' . $moduleName . '" module' : ' (global)'
+                ));
             } else {
                 $io->comment('Operation cancelled by user. No services were deleted.');
             }

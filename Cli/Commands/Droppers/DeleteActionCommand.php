@@ -34,7 +34,7 @@ class DeleteActionCommand extends Command
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified Action(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified Action(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -63,15 +63,15 @@ class DeleteActionCommand extends Command
                 foreach ($actions_name as $action_name) {
                     $action_name = trim($action_name);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $action_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $action_name));
 
                     $build = $dropper->action(strtolower($action_name), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $action_name, $build['message']];
+                        $rows[] = ['✓', $action_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $action_name, $build['message']];
+                        $rows[] = ['✗', $action_name, $build['message']];
                         $failureCount++;
                     }
                 }

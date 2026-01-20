@@ -17,27 +17,31 @@ use Helpers\File\Paths;
 
 trait GenerateNotificationTrait
 {
-    public function emailNotification(string $email_notification, string $module): array
+    public function emailNotification(string $email_notification, ?string $module = null): array
     {
         return $this->customNotification($email_notification, 'email', $module);
     }
 
-    public function customNotification(string $custom_notification, string $type, string $module): array
+    public function customNotification(string $custom_notification, string $type, ?string $module = null): array
     {
         $default_template_path = Paths::cliPath('Build/Templates/');
         $custom_template_path = Paths::storagePath('build/templates/');
         $template = ucfirst($type) . 'NotificationTemplate.php.stub';
-        $param = "'" . strtolower($custom_notification) . "'";
 
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
-        $namespace = 'App\\' . $module_name;
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+            $namespace = 'App\\' . $module_name;
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists($directory)) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath();
+            $namespace = 'App';
         }
 
         $custom_template = $custom_template_path . $template;

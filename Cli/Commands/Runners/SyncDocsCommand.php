@@ -63,7 +63,7 @@ class SyncDocsCommand extends Command
                 $header = "<!-- This file is auto-generated from docs/$lowerPackage.md -->\n\n";
 
                 if ($this->fileReadWrite->put($target, $header . $content)) {
-                    $io->text("<info>✓</info> Synced $lowerPackage.md to $package/README.md");
+                    $io->text("✓ Synced $lowerPackage.md to $package/README.md");
                     $synced++;
                 } else {
                     $io->error("Failed to write to $target");

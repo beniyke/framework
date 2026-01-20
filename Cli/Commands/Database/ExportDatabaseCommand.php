@@ -50,7 +50,7 @@ class ExportDatabaseCommand extends Command
                 $io->success($build['message']);
 
                 if (isset($build['filepath'])) {
-                    $io->text(sprintf('<fg=cyan>Exported to:</> <fg=white>%s</>', $build['filepath']));
+                    $io->text(sprintf('Exported to: %s', $build['filepath']));
                 }
             } else {
                 $io->warning('Export Failed: ' . $build['message']);

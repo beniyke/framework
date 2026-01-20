@@ -33,7 +33,7 @@ class DeleteModuleCommand extends Command
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=red>DANGER: Are you absolutely sure you want to delete this module and all its contents? [y]/n </>', false);
+        return new ConfirmationQuestion('DANGER: Are you absolutely sure you want to delete this module and all its contents? This cannot be undone.', false);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

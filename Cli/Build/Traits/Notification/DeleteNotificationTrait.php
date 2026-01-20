@@ -17,27 +17,33 @@ use Helpers\File\Paths;
 
 trait DeleteNotificationTrait
 {
-    public function emailNotification(string $email_notification, string $module): array
+    public function emailNotification(string $email_notification, ?string $module = null): array
     {
         return $this->customNotification($email_notification, 'email', $module);
     }
 
-    public function customNotification(string $custom_notification, string $type, string $module): array
+    public function customNotification(string $custom_notification, string $type, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists($directory)) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath();
         }
 
         $custom_notification_name = ucfirst($custom_notification) . ucfirst($type) . 'Notification';
         $file = $directory . '/Notifications/' . ucfirst($type) . '/' . $custom_notification_name . '.php';
 
         if (! FileSystem::exists($file)) {
+            error_log('Notification file not found: ' . $file);
+
             return [
                 'status' => false,
                 'message' => $custom_notification_name . ' file not found.',

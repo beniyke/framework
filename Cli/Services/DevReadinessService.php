@@ -53,11 +53,20 @@ class DevReadinessService
         if (!empty($failures)) {
             $io->error('Development environment checks failed. Please resolve the issues below:');
 
-            if (isset($failures['Queue Service Provider']) || isset($failures['Queue Jobs Table'])) {
+            if (isset($failures['Queue Service Provider'])) {
                 $io->text([
                     '<fg=yellow>Queue has not been installed.</>',
                     'To install, run this command:',
                     '<fg=cyan>php dock package:install Queue --system</>',
+                    ''
+                ]);
+            }
+
+            if (isset($failures['Queue Jobs Table']) && ! isset($failures['Queue Service Provider'])) {
+                $io->text([
+                    '<fg=yellow>The queue jobs table is missing.</>',
+                    'Action: Run database migrations to create the required table:',
+                    '<fg=cyan>php dock migrate</>',
                     ''
                 ]);
             }
@@ -96,6 +105,8 @@ class DevReadinessService
 
     private function checkQueueTableExists(): bool
     {
-        return DB::connection()->tableExists(self::QUEUE_TABLE);
+        $tables = DB::connection()->getTables();
+
+        return ! empty(array_filter($tables, fn ($table) => strtolower($table) === strtolower(self::QUEUE_TABLE)));
     }
 }

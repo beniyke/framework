@@ -17,7 +17,7 @@ use Helpers\File\Paths;
 
 trait GenerateViewModelTrait
 {
-    public function view_model(string $view_model, string $module, bool $isForm = false): array
+    public function view_model(string $view_model, ?string $module = null, bool $isForm = false): array
     {
         $default_template = Paths::cliPath('Build/Templates/ViewModelTemplate.php.stub');
         $custom_template = Paths::storagePath('build/ViewModelTemplate.php.stub');
@@ -27,15 +27,20 @@ trait GenerateViewModelTrait
             $custom_template = Paths::storagePath('build/FormViewModelTemplate.php.stub');
         }
 
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
-        $namespace = 'App\\' . $module_name;
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+            $namespace = 'App\\' . $module_name;
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists($directory)) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath();
+            $namespace = 'App';
         }
 
         $view_model_name = ucfirst($view_model);

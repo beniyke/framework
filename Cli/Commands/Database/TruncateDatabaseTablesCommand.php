@@ -41,7 +41,7 @@ class TruncateDatabaseTablesCommand extends Command
 
     protected function truncateConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=red>WARNING: Are you absolutely sure you want to truncate the specified database tables? This action is irreversible.</> [y]/n ', false);
+        return new ConfirmationQuestion('WARNING: Are you absolutely sure you want to truncate the specified database tables? This action is irreversible.', false);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

@@ -39,7 +39,11 @@ class CreateTaskCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Task/Job Generator');
-        $io->note(sprintf('Attempting to create Task Class "%s" in %s.', $taskName, $moduleName ? "module \"$moduleName\"" : 'global tasks directory'));
+        $io->note(sprintf(
+            'Attempting to create Task Class "%s"%s.',
+            $taskName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
@@ -51,7 +55,7 @@ class CreateTaskCommand extends Command
 
                 $details = [
                     'Class Name' => $taskName . 'Task',
-                    'Module' => $moduleName ?? 'Global',
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if (isset($build['path'])) {

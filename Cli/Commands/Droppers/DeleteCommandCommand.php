@@ -33,7 +33,7 @@ class DeleteCommandCommand extends Command
 
     protected function deleteCommandConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete this command? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete this command?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

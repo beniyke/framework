@@ -17,20 +17,25 @@ use Helpers\File\Paths;
 
 trait GenerateServiceTrait
 {
-    public function service(string $service, string $module): array
+    public function service(string $service, ?string $module = null): array
     {
         $default_template = Paths::cliPath('Build/Templates/ServiceTemplate.php.stub');
         $custom_template = Paths::storagePath('build/ServiceTemplate.php.stub');
 
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
-        $namespace = 'App\\' . $module_name;
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+            $namespace = 'App\\' . $module_name;
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists($directory)) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath();
+            $namespace = 'App';
         }
 
         $service_name = ucfirst($service);

@@ -26,15 +26,15 @@ class DeleteRequestCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('request_name', InputArgument::REQUIRED, 'Name Of the Request DTO(s) to be Deleted (comma-separated).')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Delete the Request DTO from.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Delete the Request DTO from.')
             ->setName('request:delete')
             ->setDescription('Deletes Existing Request DTO(s).')
-            ->setHelp('This command allows you to delete an existing Request DTO...' . PHP_EOL . 'Note: To delete a request dto from a module, first enter the name of the request dto(s), add a space, then the name of the module e.g. login account. Use commas to delete multiple DTOs.');
+            ->setHelp('This command allows you to delete an existing Request DTO...' . PHP_EOL . 'Note: To delete a request dto from a module, first enter the name of the request dto(s), add a space, then the name of the module e.g. login account. Use commas to delete multiple DTOs. Omitting the module will attempt to delete global Request DTOs from "App/Requests".');
     }
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified Request DTO(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified Request DTO(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,11 @@ class DeleteRequestCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Request DTO Deletion');
-        $io->note(sprintf('Attempting to delete Request DTO(s) "%s" from module "%s".', $requestNamesInput, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete Request DTO(s) "%s"%s.',
+            $requestNamesInput,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteConfirmation();
@@ -64,15 +68,15 @@ class DeleteRequestCommand extends Command
                 foreach ($requests_name as $request_name) {
                     $request_name = trim($request_name);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $request_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $request_name));
 
                     $build = $dropper->request(strtolower($request_name), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $request_name, $build['message']];
+                        $rows[] = ['✓', $request_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $request_name, $build['message']];
+                        $rows[] = ['✗', $request_name, $build['message']];
                         $failureCount++;
                     }
                 }
@@ -85,7 +89,10 @@ class DeleteRequestCommand extends Command
                     return Command::FAILURE;
                 }
 
-                $io->success(sprintf('All specified Request DTOs were successfully deleted from the "%s" module.', $moduleName));
+                $io->success(sprintf(
+                    'All specified Request DTOs were successfully deleted%s.',
+                    $moduleName ? ' from the "' . $moduleName . '" module' : ' (global)'
+                ));
             } else {
                 $io->comment('Operation cancelled by user. No Request DTOs were deleted.');
             }

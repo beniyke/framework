@@ -98,7 +98,7 @@ class MigrateDatabaseCommand extends Command
 
         foreach ($results as $result) {
             $rows[] = [
-                ($action === 'Migrated' ? '<info>✓</info>' : '<comment>✗</comment>'),
+                ($action === 'Migrated' ? '✓' : '✗'),
                 basename($result['file'], '.php'),
                 $result['time'] . 's',
             ];

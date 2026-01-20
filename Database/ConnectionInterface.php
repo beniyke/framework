@@ -81,5 +81,9 @@ interface ConnectionInterface
 
     public function dropAllTables(): void;
 
+    public function createDatabase(string $databaseName): void;
+
+    public function dropDatabase(string $databaseName): void;
+
     public function disconnect(): void;
 }

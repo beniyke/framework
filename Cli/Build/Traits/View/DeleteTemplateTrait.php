@@ -17,10 +17,14 @@ use Helpers\File\Paths;
 
 trait DeleteTemplateTrait
 {
-    public function template(string $template, string $module): array
+    public function template(string $template, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name . '/Views/Templates');
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name . '/Views/Templates');
+        } else {
+            $directory = Paths::appPath('Views/Templates');
+        }
 
         $template_name = strtolower($template);
         $file = $directory . '/' . $template_name . '.php';

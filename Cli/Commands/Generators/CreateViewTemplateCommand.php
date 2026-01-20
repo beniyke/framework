@@ -26,7 +26,7 @@ class CreateViewTemplateCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('templatename', InputArgument::REQUIRED, 'Name Of The View Template to Create.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The View Template to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The View Template to.')
             ->addOption('template', null, InputOption::VALUE_REQUIRED, 'Optional base template name to extend or use (e.g., base).')
             ->setName('view:create-template')
             ->setDescription('Creates new View Template.')
@@ -42,7 +42,11 @@ class CreateViewTemplateCommand extends Command
         $baseTemplate = $input->getOption('template');
 
         $io->title('View Template Generator');
-        $io->note(sprintf('Attempting to create View Template "%s" in module "%s".', $templateName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create View Template "%s"%s.',
+            $templateName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
 
@@ -55,7 +59,7 @@ class CreateViewTemplateCommand extends Command
 
                 $details = [
                     'Template Name' => $templateName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                     'Base Template' => $baseTemplate ?: 'None specified',
                 ];
 

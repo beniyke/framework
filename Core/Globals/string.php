@@ -10,26 +10,21 @@ declare(strict_types=1);
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
 
-use Helpers\String\Str;
 use Helpers\String\StrCollection;
 use Helpers\String\Text;
 use Helpers\String\TextCollection;
 
 if (! function_exists('str')) {
-    function str(mixed $string = null): Str|StrCollection
+    function str(mixed $string): StrCollection
     {
-        return empty($string)
-            ? new Str()
-            : StrCollection::make($string);
+        return StrCollection::make($string);
     }
 }
 
 if (! function_exists('text')) {
-    function text($text = null): Text|TextCollection
+    function text(string $text): TextCollection
     {
-        return empty($text)
-            ? new Text()
-            : TextCollection::make($text);
+        return TextCollection::make($text);
     }
 }
 

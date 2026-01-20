@@ -25,7 +25,7 @@ class CreateRequestCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('requestname', InputArgument::REQUIRED, 'Name Of The Request DTO to Generate.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The Request DTO to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The Request DTO to.')
             ->setName('request:create')
             ->setDescription('Creates new Request DTO.')
             ->setHelp('This command allows you to create a new Request DTO...' . PHP_EOL . 'Note: To create a request DTO for a module, first enter the name of the request DTO, add a space, then the name of the module e.g. login account');
@@ -39,7 +39,11 @@ class CreateRequestCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Request DTO Generator');
-        $io->note(sprintf('Attempting to create Request DTO "%s" in module "%s".', $requestName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create Request DTO "%s"%s.',
+            $requestName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
@@ -51,7 +55,7 @@ class CreateRequestCommand extends Command
 
                 $details = [
                     'Class Name' => $requestName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if (isset($build['path'])) {

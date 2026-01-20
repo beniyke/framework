@@ -14,6 +14,17 @@ namespace Helpers\String;
 
 use BadMethodCallException;
 
+/**
+ * @method self contains(string|array $needles, bool $ignoreCase = false)
+ * @method self startsWith(string $needle, bool $ignoreCase = false)
+ * @method self endsWith(string $needle, bool $ignoreCase = false)
+ * @method self limit(int $limit = 100, string $end = '...')
+ * @method self lower()
+ * @method self upper()
+ * @method self trim()
+ * @method self replace(array|string $find, array|string $replace)
+ * @method self prettyImplode(string $conjunction = 'and')
+ */
 class StrCollection
 {
     private $string;

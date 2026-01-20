@@ -17,10 +17,14 @@ use Helpers\File\Paths;
 
 trait DeleteModelTrait
 {
-    public function model(string $model, string $module): array
+    public function model(string $model, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+        } else {
+            $directory = Paths::appPath();
+        }
 
         $model_name = ucfirst($model);
         $file = $directory . '/Models/' . $model_name . '.php';

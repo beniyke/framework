@@ -17,18 +17,23 @@ use Helpers\File\Paths;
 
 trait DeleteValidationTrait
 {
-    public function requestValidation(string $request_validation, string $module, string $validation_type): array
+    public function requestValidation(string $request_validation, string $validation_type, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
-        $validation_type = ucfirst($validation_type);
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists($directory)) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath();
         }
+
+        $validation_type = ucfirst($validation_type);
 
         $request_validation_name = ucfirst($request_validation) . $validation_type . 'RequestValidation';
         $file = $directory . '/Validations/' . $validation_type . '/' . $request_validation_name . '.php';

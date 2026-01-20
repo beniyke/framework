@@ -47,7 +47,7 @@ class HydrateCommand extends Command
 
             if ($input->getOption('tag')) {
                 // If specific tag, we need to update the zipUrl (simplified for now assuming latest)
-                $zipUrl = "https://github.com/anchor/anchor/archive/refs/tags/{$tagName}.zip";
+                $zipUrl = "https://github.com/beniyke/anchor/archive/refs/tags/{$tagName}.zip";
             }
 
             $io->note("Target Version: {$tagName}");

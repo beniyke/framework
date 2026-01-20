@@ -25,7 +25,7 @@ class CreateServiceCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('servicename', InputArgument::REQUIRED, 'Name Of The Service to Generate.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The Service to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The Service to.')
             ->setName('service:create')
             ->setDescription('Creates new Service.')
             ->setHelp('This command allows you to create a new Service...' . PHP_EOL . 'Note: To create a Service for a module, first enter the name of the Service, add a space, then the name of the module e.g. login account');
@@ -39,7 +39,11 @@ class CreateServiceCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Service Class Generator');
-        $io->note(sprintf('Attempting to create Service Class "%s" in module "%s".', $serviceName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create Service Class "%s"%s.',
+            $serviceName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
@@ -51,7 +55,7 @@ class CreateServiceCommand extends Command
 
                 $details = [
                     'Class Name' => $serviceName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if (isset($build['path'])) {

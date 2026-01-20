@@ -34,7 +34,7 @@ class DeleteControllerCommand extends Command
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified Controller(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified Controller(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -62,15 +62,15 @@ class DeleteControllerCommand extends Command
 
                 foreach ($controllers_name as $controller_name) {
                     $controller_name = trim($controller_name);
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $controller_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $controller_name));
 
                     $build = $dropper->controller(strtolower($controller_name), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $controller_name, $build['message']];
+                        $rows[] = ['✓', $controller_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $controller_name, $build['message']];
+                        $rows[] = ['✗', $controller_name, $build['message']];
                         $failureCount++;
                     }
                 }

@@ -17,10 +17,14 @@ use Helpers\File\Paths;
 
 trait DeleteRequestTrait
 {
-    public function request(string $request, string $module): array
+    public function request(string $request, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+        } else {
+            $directory = Paths::appPath();
+        }
 
         $request_name = ucfirst($request);
         $file = $directory . '/Requests/' . $request_name . 'Request.php';

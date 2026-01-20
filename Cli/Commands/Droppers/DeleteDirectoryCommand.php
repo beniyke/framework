@@ -33,7 +33,7 @@ class DeleteDirectoryCommand extends Command
 
     protected function deleteDirectoryConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=red>DANGER: Are you absolutely sure you want to delete this directory and all its contents? [y]/n </>', false);
+        return new ConfirmationQuestion('DANGER: Are you absolutely sure you want to delete this directory and all its contents?', false);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

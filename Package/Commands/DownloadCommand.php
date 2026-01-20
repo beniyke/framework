@@ -27,7 +27,7 @@ use Throwable;
 
 class DownloadCommand extends Command
 {
-    private const GITHUB_ORG_URL = "https://github.com/anchor/";
+    private const GITHUB_ORG_URL = "https://github.com/beniyke/";
 
     private PackageManager $packageManager;
 

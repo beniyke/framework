@@ -465,11 +465,10 @@ class Connection implements ConnectionInterface
         $sql = match ($this->driver) {
             'sqlite' => "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
             'mysql', 'mariadb' => "
-                SELECT table_name
+                SELECT table_name AS table_name
                 FROM information_schema.tables
                 WHERE table_type = 'BASE TABLE'
-                AND table_schema = DATABASE()
-            ",
+                AND table_schema = " . ($this->config['database'] ? $this->pdo->quote($this->config['database']) : 'DATABASE()'),
             'pgsql' => "
                 SELECT table_name
                 FROM information_schema.tables
@@ -481,9 +480,13 @@ class Connection implements ConnectionInterface
         };
 
         $results = $this->select($sql);
-        $columnKey = ($this->driver === 'sqlite') ? 'name' : 'table_name';
 
-        return array_column($results, $columnKey);
+        if (empty($results)) {
+            return [];
+        }
+
+        // Get the first column of each row, regardless of its key case
+        return array_map(fn ($row) => (string) reset($row), $results);
     }
 
     public function tableExists(string $table): bool

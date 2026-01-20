@@ -56,6 +56,10 @@ class Autoloader
         $parts = explode('\\', $classname);
         $root_namespace = $parts[0];
 
+        if ($root_namespace === 'Carbon') {
+            return $this->directoryDiscovery->getMapValue('libs') . str_replace('Carbon\\', $this->directoryDiscovery->getMapValue('carbon'), $classname);
+        }
+
         if ($this->directoryDiscovery->isSystemNamespace($root_namespace)) {
             return $this->directoryDiscovery->getMapValue('system') . $classname;
         }
@@ -66,11 +70,6 @@ class Autoloader
 
         if ($root_namespace === 'App') {
             return $this->directoryDiscovery->resolveAppNamespace($classname);
-        }
-
-        if ($root_namespace === 'Carbon') {
-            $carbon_map = $this->directoryDiscovery->getMapValue('carbon');
-            $classname = str_replace('Carbon\\', $carbon_map, $classname);
         }
 
         return $this->directoryDiscovery->getMapValue('packages') . $classname;

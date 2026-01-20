@@ -26,15 +26,15 @@ class DeleteViewTemplateCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('templatename', InputArgument::REQUIRED, 'Name Of The View template(s) to be deleted (comma-separated).')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to delete The View template from.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to delete The View template from.')
             ->setName('view:delete-template')
             ->setDescription('Deletes specific view template(s).')
-            ->setHelp('This command allows you to delete a specified view template...');
+            ->setHelp('This command allows you to delete a specified view template...' . PHP_EOL . 'Note: To delete a view template from a module, first enter the name of the view template(s), add a space, then the name of the module. Use commas to delete multiple templates. Omitting the module will attempt to delete global templates from "App/Views/Templates".');
     }
 
     protected function deleteViewTemplateConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified View Template(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified View Template(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,11 @@ class DeleteViewTemplateCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('View Template Deletion');
-        $io->note(sprintf('Attempting to delete View Template(s) "%s" from module "%s".', $templateNamesInput, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete View Template(s) "%s"%s.',
+            $templateNamesInput,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteViewTemplateConfirmation();
@@ -64,15 +68,15 @@ class DeleteViewTemplateCommand extends Command
                 foreach ($templates_name as $template_name) {
                     $template_name = trim($template_name);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $template_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $template_name));
 
                     $build = $dropper->template(strtolower($template_name), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $template_name, $build['message']];
+                        $rows[] = ['✓', $template_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $template_name, $build['message']];
+                        $rows[] = ['✗', $template_name, $build['message']];
                         $failureCount++;
                     }
                 }
@@ -85,7 +89,10 @@ class DeleteViewTemplateCommand extends Command
                     return Command::FAILURE;
                 }
 
-                $io->success(sprintf('All specified View Templates were successfully deleted from the "%s" module.', $moduleName));
+                $io->success(sprintf(
+                    'All specified View Templates were successfully deleted%s.',
+                    $moduleName ? ' from the "' . $moduleName . '" module' : ' (global)'
+                ));
             } else {
                 $io->comment('Operation cancelled by user. No View Templates were deleted.');
             }

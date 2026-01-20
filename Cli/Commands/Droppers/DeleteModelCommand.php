@@ -26,15 +26,15 @@ class DeleteModelCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('modelname', InputArgument::REQUIRED, 'Name Of The Model to be Deleted.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Delete Model From.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Delete Model From.')
             ->setName('model:delete')
             ->setDescription('Deletes existing model.')
-            ->setHelp('This command allows you to delete an existing model...' . PHP_EOL . 'Note: To delete a model from a module, first enter the name of the model, add a space, then the name of the module e.g login account');
+            ->setHelp('This command allows you to delete an existing model...' . PHP_EOL . 'Note: To delete a model from a module, first enter the name of the model, add a space, then the name of the module e.g login account. Omitting the module will attempt to delete a global model from "App/Models".');
     }
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete this model file? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete this model file?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,11 @@ class DeleteModelCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Model Deletion');
-        $io->note(sprintf('Attempting to delete model "%s" from module "%s".', $modelToDelete, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete model "%s"%s.',
+            $modelToDelete,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteConfirmation();

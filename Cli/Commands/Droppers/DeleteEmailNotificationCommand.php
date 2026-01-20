@@ -26,7 +26,7 @@ class DeleteEmailNotificationCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('email_notification_name', InputArgument::REQUIRED, 'Name Of the Email Notification(s) to be Deleted (comma-separated).')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Delete the Email Notification from.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Delete the Email Notification from.')
             ->setName('email-notification:delete')
             ->setDescription('Deletes Existing Email Notification(s).')
             ->setHelp('This command allows you to delete an existing Email Notification...' . PHP_EOL . 'Note: To delete a email notification from a module, first enter the name of the email notification(s), add a space, then the name of the module e.g signup auth. Use commas to delete multiple notifications.');
@@ -45,7 +45,11 @@ class DeleteEmailNotificationCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Email Notification Deletion');
-        $io->note(sprintf('Attempting to delete notification(s) "%s" from module "%s".', $notificationNamesInput, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete notification(s) "%s"%s.',
+            $notificationNamesInput,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteConfirmation();
@@ -64,15 +68,15 @@ class DeleteEmailNotificationCommand extends Command
                 foreach ($notifications_name as $email_notification_name) {
                     $email_notification_name = trim($email_notification_name);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $email_notification_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $email_notification_name));
 
                     $build = $dropper->emailNotification(strtolower($email_notification_name), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $email_notification_name, $build['message']];
+                        $rows[] = ['✓', $email_notification_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $email_notification_name, $build['message']];
+                        $rows[] = ['✗', $email_notification_name, $build['message']];
                         $failureCount++;
                     }
                 }
@@ -85,7 +89,10 @@ class DeleteEmailNotificationCommand extends Command
                     return Command::FAILURE;
                 }
 
-                $io->success(sprintf('All specified email notifications were successfully deleted from the "%s" module.', $moduleName));
+                $io->success(sprintf(
+                    'All specified email notifications were successfully deleted%s.',
+                    $moduleName ? ' from the "' . $moduleName . '" module' : ' (global)'
+                ));
             } else {
                 $io->comment('Operation cancelled by user. No email notifications were deleted.');
             }

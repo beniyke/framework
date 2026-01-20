@@ -14,6 +14,12 @@ namespace Helpers\String;
 
 use BadMethodCallException;
 
+/**
+ * @method self pluralize()
+ * @method self singularize()
+ * @method self inflect(int $count)
+ * @method self slug(string $replacement = '-')
+ */
 class TextCollection
 {
     private string $string;

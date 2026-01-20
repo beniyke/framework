@@ -17,20 +17,25 @@ use Helpers\File\Paths;
 
 trait GenerateRequestTrait
 {
-    public function request(string $request, string $module): array
+    public function request(string $request, ?string $module = null): array
     {
         $default_template = Paths::cliPath('Build/Templates/RequestTemplate.php.stub');
         $custom_template = Paths::storagePath('build/RequestTemplate.php.stub');
 
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
-        $namespace = 'App\\' . $module_name;
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+            $namespace = 'App\\' . $module_name;
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists($directory)) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath();
+            $namespace = 'App';
         }
 
         $request_name = ucfirst($request);

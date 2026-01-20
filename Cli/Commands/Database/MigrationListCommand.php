@@ -55,9 +55,9 @@ class MigrationListCommand extends Command
                 $batch = $ranMap[$baseFileName] ?? '--';
 
                 if ($status === 'PENDING') {
-                    $displayStatus = '<fg=red>PENDING</>';
+                    $displayStatus = 'PENDING';
                 } else {
-                    $displayStatus = '<fg=green>RAN</>';
+                    $displayStatus = 'RAN';
                 }
 
                 $rows[] = [$baseFileName, $displayStatus, $batch];

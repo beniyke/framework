@@ -42,7 +42,7 @@ class ImportDatabaseCommand extends Command
 
         try {
             $dba = resolve(DBA::class);
-            $io->text('<comment>Starting import process...</comment>');
+            $io->text('Starting import process...');
 
             $build = $dba->importDatabase($fileName);
 

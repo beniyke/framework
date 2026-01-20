@@ -54,7 +54,7 @@ class GenerateApiKeyCommand extends Command
             $io->warning('⚠️  IMPORTANT: Save this key now - it will not be shown again!');
             $io->newLine();
 
-            $io->writeln('  <fg=green;options=bold>Key:</> ' . $result['key']);
+            $io->writeln('  Key: ' . $result['key']);
             $io->newLine();
 
             $io->comment('Use this key in the Authorization header:');

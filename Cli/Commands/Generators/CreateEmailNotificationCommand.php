@@ -25,7 +25,7 @@ class CreateEmailNotificationCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('email_notification_name', InputArgument::REQUIRED, 'Name Of The Email Notification to Generate.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The Email Notification to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The Email Notification to.')
             ->setName('email-notification:create')
             ->setDescription('Creates new Email Notification.')
             ->setHelp('This command allows you to create a new Email Notification...' . PHP_EOL . 'Note: To create a email notification for a module, first enter the name of the email notification, add a space, then the name of the module e.g. signup auth');
@@ -39,7 +39,11 @@ class CreateEmailNotificationCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Email Notification Generator');
-        $io->note(sprintf('Attempting to create Email Notification "%s" in module "%s".', $notificationName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create Email Notification "%s"%s.',
+            $notificationName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
@@ -53,7 +57,7 @@ class CreateEmailNotificationCommand extends Command
 
                 $details = [
                     'Class Name' => $notificationName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if (isset($build['path'])) {

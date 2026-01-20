@@ -17,19 +17,23 @@ use Helpers\File\Paths;
 
 trait GenerateModalTrait
 {
-    public function modal(string $modal, string $module, ?string $endpoint = null): array
+    public function modal(string $modal, ?string $module = null, ?string $endpoint = null): array
     {
         $default_template = Paths::cliPath('Build/Templates/ViewModalTemplate.php.stub');
         $custom_template = Paths::storagePath('build/ViewModalTemplate.php.stub');
 
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name) . '/Views/Templates';
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name) . '/Views/Templates';
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists(Paths::appSourcePath($module_name))) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath() . '/Views/Templates';
         }
 
         $modal_name = strtolower($modal);

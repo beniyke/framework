@@ -17,10 +17,14 @@ use Helpers\File\Paths;
 
 trait DeleteViewModelTrait
 {
-    public function view_model(string $view_model, string $module): array
+    public function view_model(string $view_model, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+        } else {
+            $directory = Paths::appPath();
+        }
 
         $view_model_name = ucfirst($view_model);
         $file = $directory . '/Views/Models/' . $view_model_name . 'ViewModel.php';

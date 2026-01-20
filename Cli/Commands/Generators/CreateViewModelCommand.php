@@ -26,7 +26,7 @@ class CreateViewModelCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('modelname', InputArgument::REQUIRED, 'Name Of The View Model to Create.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The View Model to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The View Model to.')
             ->setName('view:create-model')
             ->setDescription('Creates new View Model.')
             ->addOption('form', 'f', InputOption::VALUE_NONE, 'Generate a Form ViewModel')
@@ -42,7 +42,11 @@ class CreateViewModelCommand extends Command
         $isForm = (bool) $input->getOption('form');
 
         $io->title('View Model Generator');
-        $io->note(sprintf('Attempting to create View Model Class "%s" in module "%s".', $modelName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create View Model Class "%s"%s.',
+            $modelName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
@@ -54,7 +58,7 @@ class CreateViewModelCommand extends Command
 
                 $details = [
                     'Class Name' => $modelName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if (isset($build['path'])) {

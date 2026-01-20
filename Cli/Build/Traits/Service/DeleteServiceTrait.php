@@ -17,10 +17,14 @@ use Helpers\File\Paths;
 
 trait DeleteServiceTrait
 {
-    public function service(string $service, string $module): array
+    public function service(string $service, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name);
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name);
+        } else {
+            $directory = Paths::appPath();
+        }
 
         $service_name = ucfirst($service);
         $file = $directory . '/Services/' . $service_name . 'Service.php';

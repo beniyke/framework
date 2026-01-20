@@ -126,13 +126,13 @@ class FormatCommand extends Command
             if ($this->progressBar !== null) {
                 $this->progressBar->advance();
             } elseif ($progress['action'] === 'processed' && !$dryRun) {
-                $io->text("  <info>✓</info> {$progress['file']} ({$progress['detail']} changes)");
+                $io->text("  ✓ {$progress['file']} ({$progress['detail']} changes)");
             } elseif ($showSkipped && $progress['action'] === 'skipped_excluded') {
-                $io->text("  <fg=gray>⊘</> {$progress['file']} (excluded directory)");
+                $io->text("  ⊘ {$progress['file']} (excluded directory)");
             } elseif ($progress['action'] === 'skipped_size') {
-                $io->text("  <fg=yellow>⊘</> {$progress['file']} (too large: " . round($progress['detail'] / 1024 / 1024, 2) . " MB)");
+                $io->text("  ⊘ {$progress['file']} (too large: " . round($progress['detail'] / 1024 / 1024, 2) . " MB)");
             } elseif ($showSkipped && $progress['action'] === 'skipped_permission') {
-                $io->text("  <fg=red>⊘</> {$progress['file']} (permission denied)");
+                $io->text("  ⊘ {$progress['file']} (permission denied)");
             }
         });
 
@@ -152,7 +152,7 @@ class FormatCommand extends Command
         ];
 
         foreach ($paths as $path) {
-            $io->text("Processing directory: <info>{$path}</info>");
+            $io->text("Processing directory: {$path}");
             $result = $formatter->formatDirectory($path, $dryRun);
 
             $totalResults['files_processed'] += $result['files_processed'];
@@ -170,40 +170,40 @@ class FormatCommand extends Command
 
         // Display summary
         $io->newLine();
-        $io->text("Processed: <info>{$totalResults['files_processed']}</info> files");
-        $io->text("Changes made: <info>{$totalResults['total_changes']}</info> items removed");
+        $io->text("Processed: {$totalResults['files_processed']} files");
+        $io->text("Changes made: {$totalResults['total_changes']} items removed");
 
         // Display detailed stats if available
         if (!empty($totalResults['stats'])) {
             $stats = $totalResults['stats'];
             $io->newLine();
-            $io->text('<comment>Breakdown:</comment>');
+            $io->text('Breakdown:');
             if ($stats['docblocks_removed'] > 0) {
-                $io->text("  • Redundant docblocks: <info>{$stats['docblocks_removed']}</info>");
+                $io->text("  • Redundant docblocks: {$stats['docblocks_removed']}");
             }
             if ($stats['inline_comments_removed'] > 0) {
-                $io->text("  • Inline comments: <info>{$stats['inline_comments_removed']}</info>");
+                $io->text("  • Inline comments: {$stats['inline_comments_removed']}");
             }
             if ($stats['numbered_steps_removed'] > 0) {
-                $io->text("  • Numbered steps: <info>{$stats['numbered_steps_removed']}</info>");
+                $io->text("  • Numbered steps: {$stats['numbered_steps_removed']}");
             }
             if ($stats['obvious_actions_removed'] > 0) {
-                $io->text("  • Obvious action comments: <info>{$stats['obvious_actions_removed']}</info>");
+                $io->text("  • Obvious action comments: {$stats['obvious_actions_removed']}");
             }
             if ($stats['empty_lines_cleaned'] > 0) {
-                $io->text("  • Empty lines cleaned: <info>{$stats['empty_lines_cleaned']}</info>");
+                $io->text("  • Empty lines cleaned: {$stats['empty_lines_cleaned']}");
             }
         }
 
         if ($totalResults['files_skipped'] > 0) {
-            $io->text("Skipped: <fg=yellow>{$totalResults['files_skipped']}</> files (too large, symlinks, or permission issues)");
+            $io->text("Skipped: {$totalResults['files_skipped']} files (too large, symlinks, or permission issues)");
         }
 
         if (!empty($totalResults['errors'])) {
             $errorCount = count($totalResults['errors']);
             $io->warning("Encountered {$errorCount} errors:");
             foreach (array_slice($totalResults['errors'], 0, 5) as $error) {
-                $io->text("  <fg=red>•</> {$error}");
+                $io->text("  • {$error}");
             }
             if ($errorCount > 5) {
                 $io->text("  ... and " . ($errorCount - 5) . " more");
@@ -225,7 +225,7 @@ class FormatCommand extends Command
 
             if ($pintPerPath) {
                 foreach ($paths as $path) {
-                    $io->text("Running Pint on: <info>{$path}</info>");
+                    $io->text("Running Pint on: {$path}");
                     $this->runPint($io, $path, $pintDirty, $pintTimeout);
                 }
             } else {
@@ -333,13 +333,13 @@ class FormatCommand extends Command
 
         if ($dirty) {
             $command[] = '--dirty';
-            $io->text('<comment>Using --dirty mode (only git-changed files)</comment>');
+            $io->text('Using --dirty mode (only git-changed files)');
         }
 
         $process = new Process($command);
         $process->setTimeout($timeout);
 
-        $io->text("<fg=gray>Timeout: {$timeout}s</>");
+        $io->text("Timeout: {$timeout}s");
 
         $process->run(function ($type, $buffer) use ($io) {
             $io->write($buffer);

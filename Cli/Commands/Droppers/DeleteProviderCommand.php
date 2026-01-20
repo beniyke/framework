@@ -33,7 +33,7 @@ class DeleteProviderCommand extends Command
 
     protected function deleteProviderConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete this provider file? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete this provider file?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

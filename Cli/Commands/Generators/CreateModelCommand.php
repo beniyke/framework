@@ -25,7 +25,7 @@ class CreateModelCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('modelname', InputArgument::REQUIRED, 'Name Of The Model to Generate.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The Model to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The Model to.')
             ->setName('model:create')
             ->setDescription('Creates new model.')
             ->setHelp('This command allows you to create a new model...' . PHP_EOL . 'Note: To create a model for a module, first enter the name of the model, add a space, then the name of the module e.g. login account');
@@ -39,7 +39,11 @@ class CreateModelCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Model Generator');
-        $io->note(sprintf('Attempting to create Model "%s" in module "%s".', $modelName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create Model "%s"%s.',
+            $modelName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
@@ -52,7 +56,7 @@ class CreateModelCommand extends Command
 
                 $details = [
                     'Class Name' => $modelName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if (isset($build['path'])) {

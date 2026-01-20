@@ -54,10 +54,10 @@ class MigrationStatusCommand extends Command
 
             foreach ($statusData as $file => $status) {
                 if ($status === 'PENDING') {
-                    $displayStatus = '<fg=red>PENDING</>';
+                    $displayStatus = 'PENDING';
                     $pendingCount++;
                 } else {
-                    $displayStatus = '<fg=green>RAN</>';
+                    $displayStatus = 'RAN';
                 }
 
                 $rows[] = [

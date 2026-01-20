@@ -81,7 +81,7 @@ class SailCommand extends Command
 
         $io->newLine();
         $io->success('All checks passed! The application is ready for the Port (deployment). 🚀');
-        $io->writeln('<info>VOYAGE CLEAR! All Inspections, Repairs, and Unit Tests passed. Vessel is cleared to set sail for the Port.</info>');
+        $io->writeln('VOYAGE CLEAR! All Inspections, Repairs, and Unit Tests passed. Vessel is cleared to set sail for the Port.');
 
         return Command::SUCCESS;
     }

@@ -19,8 +19,12 @@ trait DeleteModalTrait
 {
     public function modal(string $modal, ?string $module = null): array
     {
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name) . '/Views/Templates';
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name) . '/Views/Templates';
+        } else {
+            $directory = Paths::appPath('Views/Templates');
+        }
 
         $modal_name = strtolower($modal);
         $file = $directory . '/modals/' . $modal_name . '.php';

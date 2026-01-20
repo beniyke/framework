@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Queue;
 
 use Core\Support\Adapters\Interfaces\OSCheckerInterface;
-use Exception;
 use Helpers\File\Contracts\CacheInterface;
 use Queue\Interfaces\QueueDispatcherInterface;
 use RuntimeException;
+use Throwable;
 
 if (! function_exists('posix_kill') && ! function_exists('pcntl_signal')) {
     function posix_kill($pid, $sig)
@@ -88,7 +88,7 @@ class Worker
     public function start(): void
     {
         if ($this->hasStarted()) {
-            throw new RuntimeException("Worker '{$this->queueName}' is already running. Use stop or restart command.");
+            throw new RuntimeException("Worker '{$this->queueName}' is already running (PID: " . $this->getStatus()['pid'] . "). Use stop or restart command.");
         }
 
         ignore_user_abort(true);
@@ -145,16 +145,18 @@ class Worker
 
     public function status(): string
     {
-        if ($this->hasStarted()) {
-            $content = $this->cache->read($this->getCacheKey());
+        $status = $this->getStatus();
 
-            if ($content === self::PAUSE_COMMAND) {
-                return "Worker '{$this->queueName}' is PAUSED. Use 'queue:resume --identifier={$this->queueName}' to continue.";
-            }
+        if ($status['status'] === 'running') {
+            return "Worker '{$this->queueName}' is running (PID: {$status['pid']}). Last runtime was {$status['last_seen']}";
+        }
 
-            return $content !== self::RESTART_COMMAND ?
-                "Worker '{$this->queueName}' is running. Last runtime was " . $content :
-                "Worker '{$this->queueName}' is restarting...";
+        if ($status['status'] === 'paused') {
+            return "Worker '{$this->queueName}' is PAUSED (PID: {$status['pid']}). Use 'queue:resume --identifier={$this->queueName}' to continue.";
+        }
+
+        if ($status['status'] === 'restarting') {
+            return "Worker '{$this->queueName}' is restarting (PID: {$status['pid']})...";
         }
 
         return "No active process running. Worker '{$this->queueName}' has not been started";
@@ -163,12 +165,19 @@ class Worker
     private function daemon(): void
     {
         // Ensure the worker is registered as running immediately
-        if (! $this->hasStarted()) {
-            $this->cache->write($this->getCacheKey(), 'started');
-        }
+        $this->updateStatus('started');
 
         while ($this->running) {
-            $status = $this->cache->read($this->getCacheKey());
+            $statusData = $this->cache->read($this->getCacheKey());
+            $status = is_array($statusData) ? ($statusData['status'] ?? '') : $statusData;
+
+            // Handle potential Windows race condition where the file might be temporarily
+            // locked during an atomic replace operation.
+            if (($status === '' || $status === null) && $this->osChecker->isWindows()) {
+                usleep(50000); // 50ms wait
+                $statusData = $this->cache->read($this->getCacheKey());
+                $status = is_array($statusData) ? ($statusData['status'] ?? '') : $statusData;
+            }
 
             if ($status === '' || $status === null) {
                 $this->terminate(); // Handles stop
@@ -177,7 +186,7 @@ class Worker
             if ($this->checkState) {
                 if ($status === self::RESTART_COMMAND) {
                     $this->handleRestart();
-                    $this->cache->write($this->getCacheKey(), 'started');
+                    $this->updateStatus('started');
 
                     continue;
                 }
@@ -279,7 +288,7 @@ class Worker
             foreach (self::$jobCallbacks as $callback) {
                 $callback('completed', $jobData);
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             error_log('Error in child process (PID: ' . getmypid() . '): ' . $e->getMessage());
 
             $jobData['duration_ms'] = round((microtime(true) - $startTime) * 1000, 2);
@@ -298,12 +307,12 @@ class Worker
 
     protected function run(): void
     {
-        $this->cache->write($this->getCacheKey(), date('Y-m-d H:i:s'));
+        $this->updateStatus(date('Y-m-d H:i:s'));
 
         try {
             $dispatcher = $this->getDispatcher();
             $response = $this->dispatchJobs($dispatcher);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $response = 'Error: ' . $e->getMessage();
         }
 
@@ -416,31 +425,112 @@ class Worker
         return $this->dispatcher;
     }
 
-    private function hasStarted(): bool
-    {
-        return $this->cache->has($this->getCacheKey());
-    }
-
     private function hasStopped(): bool
     {
-        $content = $this->cache->read($this->getCacheKey());
+        $status = $this->cache->read($this->getCacheKey());
 
-        return ! $this->cache->has($this->getCacheKey()) || $content === '' || $content === null;
+        if (($status === '' || $status === null) && $this->osChecker->isWindows() && $this->running) {
+            usleep(20000); // 20ms
+            $status = $this->cache->read($this->getCacheKey());
+        }
+
+        if ($status === '' || $status === null) {
+            return true;
+        }
+
+        return false;
     }
 
     private function isRestarting(): bool
     {
-        return $this->hasStarted() && $this->cache->read($this->getCacheKey()) === self::RESTART_COMMAND;
+        $status = $this->cache->read($this->getCacheKey());
+
+        if (($status === '' || $status === null) && $this->osChecker->isWindows() && $this->running) {
+            usleep(20000);
+            $status = $this->cache->read($this->getCacheKey());
+        }
+
+        if ($status === self::RESTART_COMMAND) {
+            return true;
+        }
+
+        return false;
     }
 
     private function isPaused(): bool
     {
-        return $this->hasStarted() && $this->cache->read($this->getCacheKey()) === self::PAUSE_COMMAND;
+        $statusData = $this->cache->read($this->getCacheKey());
+        $status = is_array($statusData) ? ($statusData['status'] ?? '') : $statusData;
+
+        if (($status === '' || $status === null) && $this->osChecker->isWindows() && $this->running) {
+            usleep(20000);
+            $statusData = $this->cache->read($this->getCacheKey());
+            $status = is_array($statusData) ? ($statusData['status'] ?? '') : $statusData;
+        }
+
+        return $status === self::PAUSE_COMMAND;
+    }
+
+    private function getStatus(): array
+    {
+        $data = $this->cache->read($this->getCacheKey());
+
+        if (is_array($data) && isset($data['pid'])) {
+            return $data;
+        }
+
+        return [
+            'status' => $data ?: 'stopped',
+            'pid' => null,
+            'last_seen' => null,
+        ];
+    }
+
+    private function updateStatus(string $status): void
+    {
+        $this->cache->write($this->getCacheKey(), [
+            'status' => $status,
+            'pid' => getmypid(),
+            'last_seen' => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    private function hasStarted(): bool
+    {
+        $status = $this->getStatus();
+
+        if ($status['status'] === 'stopped' || $status['pid'] === null) {
+            return false;
+        }
+
+        return $this->isProcessRunning((int) $status['pid']);
+    }
+
+    private function isProcessRunning(int $pid): bool
+    {
+        if ($this->osChecker->isWindows()) {
+            $output = [];
+            exec("tasklist /FI \"PID eq {$pid}\" /NH", $output);
+
+            return isset($output[0]) && str_contains($output[0], (string) $pid);
+        }
+
+        if (function_exists('posix_kill')) {
+            return posix_kill($pid, 0);
+        }
+
+        $output = [];
+        exec("ps -p {$pid}", $output);
+
+        return count($output) > 1;
     }
 
     private function memoryExceeded(): bool
     {
-        return memory_get_usage(true) >= ($this->memoryLimit * 1024 * 1024);
+        $memoryUsage = memory_get_usage(true);
+        $exceeded = $memoryUsage >= ($this->memoryLimit * 1024 * 1024);
+
+        return $exceeded;
     }
 
     protected function sleep(int $seconds): void

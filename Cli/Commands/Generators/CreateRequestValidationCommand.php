@@ -26,7 +26,7 @@ class CreateRequestValidationCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('validation_name', InputArgument::REQUIRED, 'Name Of The Request Validation to Generate.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The Request Validation to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The Request Validation to.')
             ->addOption('type', 't', InputOption::VALUE_REQUIRED, 'The type of validation (form or api)')
             ->setName('validation:create')
             ->setDescription('Creates new Request Validation.')
@@ -57,19 +57,24 @@ class CreateRequestValidationCommand extends Command
         }
 
         $io->title('Request Validation Generator');
-        $io->note(sprintf('Attempting to create %s Request Validation Class "%s" in module "%s".', ucfirst(strtolower($validationType)), $validationName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create %s Request Validation Class "%s"%s.',
+            ucfirst(strtolower($validationType)),
+            $validationName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
             $io->text('Generating Request Validation file...');
-            $build = $generator->requestValidation($validationName, $moduleName, strtolower($validationType));
+            $build = $generator->requestValidation($validationName, strtolower($validationType), $moduleName);
 
             if ($build['status']) {
                 $io->success($build['message']);
 
                 $details = [
                     'Class Name' => $validationName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if (isset($build['path'])) {

@@ -26,7 +26,7 @@ class CreateViewModalCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('modalname', InputArgument::REQUIRED, 'Name Of The View Modal to Create.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Generate The View Modal to.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The View Modal to.')
             ->addOption('endpoint', null, InputOption::VALUE_REQUIRED, 'Optional AJAX endpoint for the modal form/data.')
             ->setName('view:create-modal')
             ->setDescription('Creates new View Modal.')
@@ -42,7 +42,11 @@ class CreateViewModalCommand extends Command
         $endpoint = $input->getOption('endpoint');
 
         $io->title('View Modal Generator');
-        $io->note(sprintf('Attempting to create View Modal "%s" in module "%s".', $modalName, $moduleName));
+        $io->note(sprintf(
+            'Attempting to create View Modal "%s"%s.',
+            $modalName,
+            $moduleName ? ' in module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $generator = Generators::getInstance();
@@ -55,7 +59,7 @@ class CreateViewModalCommand extends Command
 
                 $details = [
                     'Modal Name' => $modalName,
-                    'Module' => $moduleName,
+                    'Module' => $moduleName ?: '(Global)',
                 ];
 
                 if ($endpoint) {

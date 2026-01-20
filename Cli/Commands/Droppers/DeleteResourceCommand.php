@@ -34,7 +34,7 @@ class DeleteResourceCommand extends Command
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified Resource(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified Resource(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -64,15 +64,15 @@ class DeleteResourceCommand extends Command
                 foreach ($resources_name as $resource_name) {
                     $resource_name = trim($resource_name);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $resource_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $resource_name));
 
                     $build = $dropper->resource(strtolower($resource_name), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $resource_name, $build['message']];
+                        $rows[] = ['✓', $resource_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $resource_name, $build['message']];
+                        $rows[] = ['✗', $resource_name, $build['message']];
                         $failureCount++;
                     }
                 }

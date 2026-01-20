@@ -34,7 +34,7 @@ class DeleteTaskCommand extends Command
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete this task file? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete this task file?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,11 @@ class DeleteTaskCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('Task Deletion');
-        $io->note(sprintf('Attempting to delete task "%s" from %s.', $taskToDelete, $moduleName ? "module \"$moduleName\"" : 'global tasks directory'));
+        $io->note(sprintf(
+            'Attempting to delete task "%s"%s.',
+            $taskToDelete,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteConfirmation();

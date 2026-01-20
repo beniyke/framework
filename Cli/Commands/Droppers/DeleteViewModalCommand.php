@@ -26,15 +26,15 @@ class DeleteViewModalCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('modalname', InputArgument::REQUIRED, 'Name Of The View Modal to be deleted.')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to delete The View Modal from.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to delete The View Modal from.')
             ->setName('view:delete-modal')
             ->setDescription('Deletes specific view modal.')
-            ->setHelp('This command allows you to delete a specified view modal...');
+            ->setHelp('This command allows you to delete a specified view modal...' . PHP_EOL . 'Note: To delete a view modal from a module, first enter the name of the view modal, add a space, then the name of the module. Omitting the module will attempt to delete a global view modal from "App/Views/Templates/modals".');
     }
 
     protected function deleteViewModalConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete this view modal file? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete this view modal file?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -45,7 +45,11 @@ class DeleteViewModalCommand extends Command
         $moduleName = $input->getArgument('modulename');
 
         $io->title('View Modal Deletion');
-        $io->note(sprintf('Attempting to delete modal "%s" from module "%s".', $modalToDelete, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete modal "%s"%s.',
+            $modalToDelete,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteViewModalConfirmation();

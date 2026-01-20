@@ -14,7 +14,7 @@ namespace Cli\Helpers;
 
 class CommandMapper
 {
-    private const BASE_DB_DEPENDENT_COMMANDS = ['worker', 'start', 'restart', 'migration:run', 'migration:refresh', 'migration:reset', 'migration:rollback', 'migration:list', 'migration:lock', 'migration:unlock', 'migration:status', 'seeder:run', 'database:delete', 'database:export', 'database:import', 'database:tables', 'database:truncate', 'playground', 'package:uninstall', 'package:install', 'dev'];
+    private const BASE_DB_DEPENDENT_COMMANDS = ['worker', 'start', 'restart', 'migration:run', 'migration:refresh', 'migration:reset', 'migration:rollback', 'migration:list', 'migration:lock', 'migration:unlock', 'migration:status', 'seeder:run', 'database:export', 'database:import', 'database:tables', 'database:truncate', 'playground', 'package:uninstall', 'package:install', 'dev'];
 
     private const COMMAND_ALIASES = ['dock' => 'list'];
     private const TEST_COMMAND = ['vendor/bin/pest', 'test', 'vendor/bin/phpunit'];

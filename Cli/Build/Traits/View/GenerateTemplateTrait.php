@@ -17,19 +17,23 @@ use Helpers\File\Paths;
 
 trait GenerateTemplateTrait
 {
-    public function template(string $template, string $module, ?string $type = null): array
+    public function template(string $template, ?string $module = null, ?string $type = null): array
     {
         $default_template = Paths::cliPath('Build/Templates/ViewTemplate.php.stub');
         $custom_template = Paths::storagePath('build/ViewTemplate.php.stub');
 
-        $module_name = ucfirst($module);
-        $directory = Paths::appSourcePath($module_name) . '/Views/Templates';
+        if ($module) {
+            $module_name = ucfirst($module);
+            $directory = Paths::appSourcePath($module_name) . '/Views/Templates';
 
-        if (! FileSystem::exists($directory)) {
-            return [
-                'status' => false,
-                'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
-            ];
+            if (! FileSystem::exists(Paths::appSourcePath($module_name))) {
+                return [
+                    'status' => false,
+                    'message' => 'The module ' . $module_name . ' does not exist kindly create ' . $module_name . ' module.',
+                ];
+            }
+        } else {
+            $directory = Paths::appPath() . '/Views/Templates';
         }
 
         $template_name = strtolower($template);

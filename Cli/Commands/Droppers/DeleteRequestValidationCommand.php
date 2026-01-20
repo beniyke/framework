@@ -27,16 +27,16 @@ class DeleteRequestValidationCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('validation_name', InputArgument::REQUIRED, 'Name Of the Request validation(s) to be Deleted (comma-separated).')
-            ->addArgument('modulename', InputArgument::REQUIRED, 'Name Of The Module to Delete the Request Validation from.')
+            ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Delete the Request Validation from.')
             ->addOption('type', 't', InputOption::VALUE_REQUIRED, 'The type of validation (form or api)')
             ->setName('validation:delete')
             ->setDescription('Deletes Existing Request validation(s).')
-            ->setHelp('This command allows you to delete an existing Request Validation...' . PHP_EOL . 'Note: To delete a request validation from a module, first enter the name of the request validation(s), add a space, then the name of the module, and specify the type using --type=form or --type=api' . PHP_EOL . 'Example: php dock validation:delete Login Auth --type=form' . PHP_EOL . 'Use commas to delete multiple request validations.');
+            ->setHelp('This command allows you to delete an existing Request Validation...' . PHP_EOL . 'Note: To delete a request validation from a module, first enter the name of the request validation(s), add a space, then the name of the module, and specify the type using --type=form or --type=api' . PHP_EOL . 'Example: php dock validation:delete Login Auth --type=form' . PHP_EOL . 'Use commas to delete multiple request validations. Omitting the module will attempt to delete global validations from "App/Validations".');
     }
 
     protected function deleteConfirmation(): ConfirmationQuestion
     {
-        return new ConfirmationQuestion('<fg=yellow>Are you sure you want to delete the specified Request Validation(s)? [y]/n </>', true);
+        return new ConfirmationQuestion('Are you sure you want to delete the specified Request Validation(s)?', true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -63,7 +63,12 @@ class DeleteRequestValidationCommand extends Command
         }
 
         $io->title('Request Validation Deletion');
-        $io->note(sprintf('Attempting to delete %s validation(s) "%s" from module "%s".', ucfirst(strtolower($validationType)), $validationNamesInput, $moduleName));
+        $io->note(sprintf(
+            'Attempting to delete %s validation(s) "%s"%s.',
+            ucfirst(strtolower($validationType)),
+            $validationNamesInput,
+            $moduleName ? ' from module "' . $moduleName . '"' : ' (global)'
+        ));
 
         try {
             $question = $this->deleteConfirmation();
@@ -81,15 +86,15 @@ class DeleteRequestValidationCommand extends Command
                 foreach ($request_validations_name as $request_validation_name) {
                     $request_validation_name = trim($request_validation_name);
 
-                    $io->text(sprintf('   Attempting to delete: <info>%s</info>', $request_validation_name));
+                    $io->text(sprintf('   Attempting to delete: %s', $request_validation_name));
 
-                    $build = $dropper->requestValidation(strtolower($request_validation_name), $moduleName, strtolower($validationType));
+                    $build = $dropper->requestValidation(strtolower($request_validation_name), strtolower($validationType), $moduleName);
 
                     if ($build['status']) {
-                        $rows[] = ['<info>✓</info>', $request_validation_name, $build['message']];
+                        $rows[] = ['✓', $request_validation_name, $build['message']];
                         $successCount++;
                     } else {
-                        $rows[] = ['<error>✗</error>', $request_validation_name, $build['message']];
+                        $rows[] = ['✗', $request_validation_name, $build['message']];
                         $failureCount++;
                     }
                 }
@@ -102,7 +107,11 @@ class DeleteRequestValidationCommand extends Command
                     return Command::FAILURE;
                 }
 
-                $io->success(sprintf('All specified form validations were successfully deleted from the "%s" module.', $moduleName));
+                $io->success(sprintf(
+                    'All specified %s validations were successfully deleted%s.',
+                    strtolower($validationType),
+                    $moduleName ? ' from the "' . $moduleName . '" module' : ' (global)'
+                ));
             } else {
                 $io->comment('Operation cancelled by user. No form validations were deleted.');
             }
