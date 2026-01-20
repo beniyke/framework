@@ -126,7 +126,7 @@ class SqliteGrammar extends SchemaGrammar
                     break;
                 case 'drop_index':
                 case 'drop_unique':
-                    $indexCommands[] = "DROP INDEX `{$command['key']}`";
+                    $indexCommands[] = "DROP INDEX IF EXISTS `{$command['key']}`";
                     break;
                 case 'change':
                 case 'rename':
@@ -178,7 +178,7 @@ class SqliteGrammar extends SchemaGrammar
 
     public function compileDropIndex(string $table, string $indexName): string
     {
-        return "DROP INDEX `{$indexName}`";
+        return "DROP INDEX IF EXISTS `{$indexName}`";
     }
 
     public function compileDropPrimary(string $table, string $name): string

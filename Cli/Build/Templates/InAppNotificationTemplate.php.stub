@@ -1,0 +1,41 @@
+<?php
+namespace {namespace}\Notifications\InApp;
+
+use App\Core\BaseInAppNotification;
+
+class {notificationName} extends BaseInAppNotification
+{
+    /**
+     * Retrieves the user ID associated with the notification.
+     */
+    public function getUser(): int
+    {
+        return $this->payload->get('id');
+    }
+
+    /**
+     * Retrieves the message content of the notification.
+     */
+    public function getMessage(): string
+    {
+        // Notification message goes in here
+        return 'Notification works';
+    }
+
+    /**
+     * Retrieves the label of the notification.
+     */
+    public function getLabel(): string
+    {
+        // Notification label goes in here
+        return 'demo';
+    }
+
+    /**
+     * Retrieves the URL associated with the notification, if available.
+     */
+    public function getUrl(): ?string
+    {
+        return null;
+    }
+}

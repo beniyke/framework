@@ -48,8 +48,8 @@ class InstallCommand extends Command
         $fromSystem = $input->getOption('system');
         $fromPackages = $input->getOption('packages');
 
-        if (($fromSystem && $fromPackages) || (!$fromSystem && !$fromPackages)) {
-            $io->error('Please specify exactly one source: --system or --packages');
+        if (($fromSystem && $fromPackages)) {
+            $io->error('Please specify at most one source: --system or --packages');
 
             return Command::FAILURE;
         }
@@ -57,7 +57,28 @@ class InstallCommand extends Command
         $io->title("Installing Package: {$package}");
 
         try {
-            $packagePath = $this->packageManager->resolvePackagePath($package, (bool) $fromSystem);
+            $isSystem = $fromSystem;
+            if (!$fromSystem && !$fromPackages) {
+                // Auto-resolve: Try packages first, then system
+                $io->text("Detecting package source...");
+                try {
+                    $packagePath = $this->packageManager->resolvePackagePath($package, false);
+                    $isSystem = false;
+                    $io->text("<info>Found in packages/</info>");
+                } catch (Throwable) {
+                    try {
+                        $packagePath = $this->packageManager->resolvePackagePath($package, true);
+                        $isSystem = true;
+                        $io->text("<info>Found in System/</info>");
+                    } catch (Throwable) {
+                        $io->error("Package {$package} could not be found in packages/ or System/.");
+
+                        return Command::FAILURE;
+                    }
+                }
+            } else {
+                $packagePath = $this->packageManager->resolvePackagePath($package, (bool) $fromSystem);
+            }
             $io->text("Resolved path: {$packagePath}");
 
             $manifest = $this->packageManager->getManifest($packagePath);

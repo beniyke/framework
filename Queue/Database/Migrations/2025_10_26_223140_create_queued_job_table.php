@@ -42,13 +42,6 @@ class CreateQueuedJobTable extends BaseMigration
      */
     public function down(): void
     {
-        Schema::table('queued_job', function (SchemaBuilder $table) {
-            $table->dropIndex('queued_job_created_at_index');
-            $table->dropIndex('queued_job_status_failed_index');
-            $table->dropIndex('queued_job_status_schedule_index');
-            $table->dropIndex('identifier');
-        });
-
         Schema::dropIfExists('queued_job');
     }
 }

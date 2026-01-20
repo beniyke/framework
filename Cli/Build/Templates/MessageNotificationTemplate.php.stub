@@ -1,0 +1,25 @@
+<?php
+namespace {namespace}\Notifications\Message;
+
+use App\Core\BaseMessageNotification;
+
+class {notificationName} extends BaseMessageNotification
+{
+    /**
+     * Retrieves the recipient associated with the notification.
+     */
+    public function getRecipient(): int
+    {
+        //{recipient} can be phone, etc.
+        return $this->payload->get('{recipient}');
+    }
+
+    /**
+     * Retrieves the message content of the notification.
+     */
+    public function getMessage(): string
+    {
+        // Notification message goes in here
+        return 'Notification works';
+    }
+}

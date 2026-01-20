@@ -301,7 +301,19 @@ class Container implements ContainerInterface
             $resolved = $this->resolveParameter($parameter);
             $dependencies[] = $resolved;
 
-            $dependencyMetadata[] = ['type' => 'resolved', 'name' => $parameter->getName(), 'typeName' => $this->getTypeName($type)];
+            if ($isClassType) {
+                $dependencyMetadata[] = [
+                    'type' => 'resolved',
+                    'name' => $parameter->getName(),
+                    'typeName' => $this->getTypeName($type),
+                ];
+            } else {
+                $dependencyMetadata[] = [
+                    'type' => 'value',
+                    'value' => $resolved,
+                    'typeName' => $this->getTypeName($type),
+                ];
+            }
         }
 
         $this->dependencyCache[$cacheKey] = $dependencyMetadata;
@@ -315,8 +327,13 @@ class Container implements ContainerInterface
         foreach ($dependencyMetadata as $meta) {
             if ($meta['type'] === 'given') {
                 $dependencies[] = $givenParameters[$meta['name']];
+            } elseif ($meta['type'] === 'value') {
+                $dependencies[] = $meta['value'];
             } elseif ($meta['type'] === 'cast') {
-                $dependencies[] = $this->castToType($meta['value'], $meta['typeName'] ? new ReflectionNamedType($meta['typeName']) : null, null);
+                // For 'cast' types, we don't try to re-instantiate ReflectionNamedType
+                // We just use the value as is or implement a string-based cast if needed.
+                // Given the current implementation, returning the value is safest.
+                $dependencies[] = $meta['value'];
             } else {
                 $serviceId = $meta['typeName'] ?? null;
 

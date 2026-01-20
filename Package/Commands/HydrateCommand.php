@@ -18,6 +18,8 @@ use Throwable;
  */
 class HydrateCommand extends Command
 {
+    private const GITHUB_TAG_URL = "https://github.com/beniyke/anchor/archive/refs/tags/%s.zip";
+
     private HydrationService $hydrationService;
 
     public function __construct(HydrationService $hydrationService)
@@ -28,7 +30,8 @@ class HydrateCommand extends Command
 
     protected function configure(): void
     {
-        $this->setName('framework:hydrate')
+        $this->setName('anchor:hydrate')
+            ->setAliases(['framework:hydrate'])
             ->setDescription('Downloads and installs/updates the framework core files (System and libs).')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite existing files without asking')
             ->addOption('tag', 't', InputOption::VALUE_OPTIONAL, 'Specific version tag to download');
@@ -46,8 +49,7 @@ class HydrateCommand extends Command
             $zipUrl = $release['zipball_url'];
 
             if ($input->getOption('tag')) {
-                // If specific tag, we need to update the zipUrl (simplified for now assuming latest)
-                $zipUrl = "https://github.com/beniyke/anchor/archive/refs/tags/{$tagName}.zip";
+                $zipUrl = sprintf(self::GITHUB_TAG_URL, $tagName);
             }
 
             $io->note("Target Version: {$tagName}");

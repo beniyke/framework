@@ -23,6 +23,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 class DownloadCommand extends Command
@@ -87,22 +88,28 @@ class DownloadCommand extends Command
                 $this->fileManipulation->mkdir($parentDir);
             }
 
-            $command = sprintf('git clone -b %s %s %s', escapeshellarg($branch), escapeshellarg($url), escapeshellarg($targetDir));
-            $io->text("Running: {$command}");
+            $command = ['git', 'clone', '-b', $branch, $url, $targetDir];
+            $io->text("Running: " . implode(' ', $command));
 
-            exec($command . ' 2>&1', $outputLines, $returnVar);
+            $process = new Process($command);
+            $process->setTimeout(null);
 
-            if ($returnVar !== 0) {
-                if ($branch === 'main') {
-                    $io->text("Failed to clone 'main', trying default branch...");
-                    $command = sprintf('git clone %s %s', escapeshellarg($url), escapeshellarg($targetDir));
-                    exec($command . ' 2>&1', $outputLines, $returnVar);
-                }
+            $process->run(function ($type, $buffer) use ($output) {
+                $output->write($buffer);
+            });
+
+            if (!$process->isSuccessful() && $branch === 'main') {
+                $io->text("Failed to clone 'main', trying default branch...");
+                $command = ['git', 'clone', $url, $targetDir];
+                $process = new Process($command);
+                $process->setTimeout(null);
+                $process->run(function ($type, $buffer) use ($output) {
+                    $output->write($buffer);
+                });
             }
 
-            if ($returnVar !== 0) {
-                $io->error(implode("\n", $outputLines));
-                throw new RuntimeException("Git clone failed.");
+            if (!$process->isSuccessful()) {
+                throw new RuntimeException("Git clone failed: " . $process->getErrorOutput());
             }
 
             $io->success("Package downloaded successfully.");
