@@ -1,0 +1,36 @@
+{
+  "name": "beniyke/framework",
+  "description": "The Anchor Framework Core.",
+  "keywords": [
+    "framework",
+    "anchor",
+    "php"
+  ],
+  "license": "MIT",
+  "type": "library",
+  "require": {
+    "php": "^8.2",
+    "ext-bcmath": "*",
+    "ext-mbstring": "*",
+    "psr/http-message": "^2.0",
+    "nesbot/carbon": "^3.10",
+    "psy/psysh": "0.12"
+  },
+  "autoload": {
+    "psr-4": {
+      "Cli\\": "Cli/",
+      "Core\\": "Core/",
+      "Database\\": "Database/",
+      "Debugger\\": "Debugger/",
+      "Defer\\": "Defer/",
+      "Formatter\\": "Formatter/",
+      "Helpers\\": "Helpers/",
+      "Mail\\": "Mail/",
+      "Notify\\": "Notify/",
+      "Package\\": "Package/",
+      "Queue\\": "Queue/",
+      "Security\\": "Security/",
+      "Testing\\": "Testing/"
+    }
+  }
+}
