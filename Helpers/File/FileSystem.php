@@ -307,6 +307,26 @@ class FileSystem
         return mkdir($path, $permission, $recursive);
     }
 
+    public static function directorySize(string $path): int
+    {
+        if (! is_dir($path)) {
+            return 0;
+        }
+
+        $size = 0;
+        $items = new FilesystemIterator($path, FilesystemIterator::SKIP_DOTS);
+
+        foreach ($items as $item) {
+            if ($item->isDir() && ! $item->isLink()) {
+                $size += static::directorySize($item->getPathname());
+            } else {
+                $size += $item->getSize();
+            }
+        }
+
+        return $size;
+    }
+
     public static function contents(string $path, ?int $flag = null): ?RecursiveIteratorIterator
     {
         if (! is_dir($path)) {
@@ -337,5 +357,20 @@ class FileSystem
     public static function write(string $path, string $content): bool
     {
         return static::put($path, $content);
+    }
+
+    /**
+     * Determine if a path is within a base directory.
+     */
+    public static function isWithin(string $path, string $basePath): bool
+    {
+        $realPath = realpath($path);
+        $realBase = realpath($basePath);
+
+        if ($realPath === false || $realBase === false) {
+            return false;
+        }
+
+        return str_starts_with($realPath, $realBase);
     }
 }

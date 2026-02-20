@@ -2,11 +2,20 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Event Dispatcher.
+ * Provides a simple observer implementation, allowing you to subscribe and listen for various events.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Core;
 
 use Core\Contracts\ShouldQueue;
 use Core\Jobs\CallQueuedListener;
-use Helpers\Data;
+use Defer\Defer;
 use Queue\Queue;
 use Testing\Fakes\EventFake;
 use Throwable;
@@ -17,9 +26,6 @@ class Event
 
     private static ?EventFake $fake = null;
 
-    /**
-     * Replace the event dispatcher with a fake.
-     */
     public static function fake(): EventFake
     {
         static::$fake = new EventFake();
@@ -36,12 +42,9 @@ class Event
         self::$listeners[$event][] = $listener;
     }
 
-    /**
-     * Dispatch an event deferred until after the response is sent.
-     */
     public static function deferred(object $eventInstance): void
     {
-        defer(function () use ($eventInstance) {
+        Defer::push(function () use ($eventInstance) {
             static::dispatch($eventInstance);
         });
     }
@@ -75,10 +78,10 @@ class Event
                 if ($instance instanceof ShouldQueue) {
                     Queue::dispatch(
                         CallQueuedListener::class,
-                        Data::make([
+                        [
                             'listener_class' => get_class($instance),
                             'event' => $eventInstance,
-                        ])
+                        ]
                     );
                     continue;
                 }
@@ -101,5 +104,10 @@ class Event
                 error_log("Event Error: Exception in listener for '$eventClass': " . $e->getMessage());
             }
         }
+    }
+
+    public static function reset(): void
+    {
+        self::$fake = null;
     }
 }

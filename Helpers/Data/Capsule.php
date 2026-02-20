@@ -12,7 +12,7 @@ declare(strict_types=1);
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
 
-namespace Helpers;
+namespace Helpers\Data;
 
 use Closure;
 use DateTimeInterface;
@@ -24,8 +24,6 @@ use Throwable;
 final class Capsule implements JsonSerializable
 {
     private array $data = [];
-
-    private array $original;
 
     private array $schema = [];
 
@@ -44,7 +42,6 @@ final class Capsule implements JsonSerializable
     private function __construct(array $data = [])
     {
         $this->data = $data;
-        $this->original = $this->data;
     }
 
     public static function make(array|object $data = []): self

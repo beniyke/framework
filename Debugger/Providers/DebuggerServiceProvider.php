@@ -12,13 +12,14 @@ declare(strict_types=1);
 
 namespace Debugger\Providers;
 
+use Core\Contracts\TerminableInterface;
 use Core\Services\DeferredServiceProvider;
 use Debugger\Debugger;
 use Debugger\DebuggerInterface;
 use Helpers\File\FileLogger;
 use Throwable;
 
-class DebuggerServiceProvider extends DeferredServiceProvider
+class DebuggerServiceProvider extends DeferredServiceProvider implements TerminableInterface
 {
     public static function provides(): array
     {
@@ -54,5 +55,12 @@ class DebuggerServiceProvider extends DeferredServiceProvider
             } catch (Throwable $e) {
             }
         });
+    }
+
+    public function terminate(): void
+    {
+        if ($this->container->has(DebuggerInterface::class)) {
+            $this->container->get(DebuggerInterface::class)->terminate();
+        }
     }
 }

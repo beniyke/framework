@@ -23,6 +23,7 @@
       "Database\\": "Database/",
       "Debugger\\": "Debugger/",
       "Defer\\": "Defer/",
+      "Exceptions\\": "Exceptions/",
       "Formatter\\": "Formatter/",
       "Helpers\\": "Helpers/",
       "Mail\\": "Mail/",

@@ -17,7 +17,7 @@ use Helpers\File\Paths;
 
 trait DeleteValidationTrait
 {
-    public function requestValidation(string $request_validation, string $validation_type, ?string $module = null): array
+    public function requestValidation(string $request_validation, string $validation_type, ?string $module = null, bool $withDto = false): array
     {
         if ($module) {
             $module_name = ucfirst($module);
@@ -48,6 +48,13 @@ trait DeleteValidationTrait
         $deleted = FileSystem::delete($file);
 
         if ($deleted) {
+            if ($withDto) {
+                $request_dto_file = $directory . '/Requests/' . ucfirst($request_validation) . 'Request.php';
+                if (FileSystem::exists($request_dto_file)) {
+                    FileSystem::delete($request_dto_file);
+                }
+            }
+
             return [
                 'status' => true,
                 'message' => $request_validation_name . ' deleted successfully.',

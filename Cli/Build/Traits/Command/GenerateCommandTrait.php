@@ -17,12 +17,19 @@ use Helpers\File\Paths;
 
 trait GenerateCommandTrait
 {
-    public function command(string $command): array
+    public function command(string $command, ?string $module = null): array
     {
         $directory = Paths::appPath('Commands');
+        $namespace = 'App\\Commands';
+
+        if ($module) {
+            $directory = Paths::appSourcePath(ucfirst($module) . '/Commands');
+            $namespace = ucfirst($module) . '\\Commands';
+        }
+
         $templatefile = Paths::cliPath('Build/Templates/CommandTemplate.php.stub');
 
-        if (! FileSystem::exists($templatefile) || strpos(FileSystem::get($templatefile), '{commandname}') === false) {
+        if (! FileSystem::exists($templatefile)) {
             return [
                 'status' => false,
                 'message' => 'Command template file not found.',
@@ -31,18 +38,23 @@ trait GenerateCommandTrait
 
         $command_name = ucfirst($command);
 
-        FileSystem::mkdir($directory);
+        FileSystem::mkdir($directory, 0755, true);
 
         $file = $directory . '/' . $command_name . 'Command.php';
 
         if (FileSystem::exists($file)) {
             return [
                 'status' => false,
-                'message' => $command_name . ' command already exist.',
+                'message' => $command_name . ' command already exists.',
             ];
         }
 
-        $newcontent = str_replace(['{commandname}'], [$command_name . 'Command'], FileSystem::get($templatefile));
+        $template = FileSystem::get($templatefile);
+        $newcontent = str_replace(
+            ['{namespace}', '{commandname}'],
+            [$namespace, $command_name . 'Command'],
+            $template
+        );
 
         $generated = FileSystem::put($file, $newcontent);
 
@@ -50,6 +62,7 @@ trait GenerateCommandTrait
             return [
                 'status' => true,
                 'message' => $command_name . ' command generated successfully.',
+                'path' => $file,
             ];
         }
 

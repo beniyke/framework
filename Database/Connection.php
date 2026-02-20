@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Database;
 
+use BackedEnum;
 use Database\Query\Builder;
 use Database\Query\Grammar;
 use Database\Query\MySqlGrammar;
@@ -24,12 +25,15 @@ use PDOException;
 use PDOStatement;
 use RuntimeException;
 use Throwable;
+use UnitEnum;
 
 class Connection implements ConnectionInterface
 {
     private PDO $pdo;
 
     public static array $queryLog = [];
+
+    protected static bool $loggingEnabled = false;
 
     public static array $queryCallbacks = [];
 
@@ -266,10 +270,29 @@ class Connection implements ConnectionInterface
     public function execute(string $sql, array $bindings = []): PDOStatement
     {
         $this->ensureConnected();
+
+        // Pre-process bindings for Enums and other types
+        $bindings = array_map(function ($binding) {
+            if ($binding instanceof BackedEnum) {
+                return $binding->value;
+            }
+            if ($binding instanceof UnitEnum) {
+                return $binding->name;
+            }
+            if (is_bool($binding)) {
+                return $binding ? 1 : 0;
+            }
+
+            return $binding;
+        }, $bindings);
+
         $stmt = $this->prepareStatement($sql);
         $this->lastQueryStart = microtime(true);
         $stmt->execute($bindings);
-        $this->logQuery($sql, $bindings);
+
+        if (self::$loggingEnabled) {
+            $this->logQuery($sql, $bindings);
+        }
 
         return $stmt;
     }
@@ -296,6 +319,22 @@ class Connection implements ConnectionInterface
     public static function listen(callable $callback): void
     {
         self::$queryCallbacks[] = $callback;
+    }
+
+    public static function enableLogging(): void
+    {
+        self::$loggingEnabled = true;
+    }
+
+    public static function disableLogging(): void
+    {
+        self::$loggingEnabled = false;
+        self::clearQueryLog();
+    }
+
+    public static function isLoggingEnabled(): bool
+    {
+        return self::$loggingEnabled;
     }
 
     public static function clearQueryLog(): void

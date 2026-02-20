@@ -23,10 +23,13 @@ use Helpers\Http\Flash;
 use Helpers\Http\Request;
 use Helpers\Http\Response;
 use Helpers\Http\Session;
+use Helpers\Macroable;
 use Throwable;
 
 class ViewEngine implements ViewInterface
 {
+    use Macroable;
+
     private string $template;
 
     private array $data = [];
@@ -454,5 +457,90 @@ class ViewEngine implements ViewInterface
     private function getLayoutPath(): string
     {
         return Paths::layoutPath();
+    }
+
+    private function canAccessAction(string|array $action): bool
+    {
+        $resource = $this->request->getRouteContext('resource');
+        $user = $this->request->user();
+
+        if (! $resource || ! $user) {
+            return false;
+        }
+
+        if (is_string($action) && str_contains($action, '|')) {
+            $action = explode('|', $action);
+        }
+
+        if (is_array($action)) {
+            foreach ($action as $act) {
+                if ($user->hasPermission("{$resource}.{$act}")) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return $user->hasPermission("{$resource}.{$action}");
+    }
+
+    private function isResourceActive(string $name, string $class = 'active', string $default = ''): string
+    {
+        return $this->isResourceContext($name) ? $class : $default;
+    }
+
+    private function context(string $key, mixed $default = null): mixed
+    {
+        return $this->request->getRouteContext($key) ?? $default;
+    }
+
+    private function isDomainContext(string $name): bool
+    {
+        return ($this->request->getRouteContext('domain') ?? '') === $name;
+    }
+
+    private function isEntityContext(string $name): bool
+    {
+        return ($this->request->getRouteContext('entity') ?? '') === $name;
+    }
+
+    private function isResourceContext(string $name): bool
+    {
+        return ($this->request->getRouteContext('resource') ?? '') === $name;
+    }
+
+    private function isActionContext(string $name): bool
+    {
+        return ($this->request->getRouteContext('action') ?? '') === $name;
+    }
+
+    /**
+     * Get a human-readable title for the current route based on context.
+     */
+    private function getRouteTitle(string $default = 'Anchor App'): string
+    {
+        $permission = $this->request->getRoutePermission();
+        if (! $permission) {
+            return $default;
+        }
+
+        return $this->config->get("permit.titles.{$permission}", $default);
+    }
+
+    private function getBreadcrumbs(): array
+    {
+        $resource = $this->request->getRouteContext('resource');
+        $action = $this->request->getRouteContext('action');
+
+        if (! $resource || ! $action) {
+            return [];
+        }
+
+        return [
+            ['label' => 'Dashboard', 'url' => 'home'],
+            ['label' => ucfirst($resource), 'url' => "{$resource}.index"],
+            ['label' => ucfirst($action), 'url' => null],
+        ];
     }
 }

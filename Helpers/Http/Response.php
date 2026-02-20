@@ -349,8 +349,12 @@ class Response
         return $this->redirect($url);
     }
 
-    public function redirect(string $url, int $status = 302): self
+    public function redirect(string $url, int $status = 302, bool $allowExternal = false): self
     {
+        if (! $allowExternal && ! request()->isInternalUrl($url)) {
+            throw new InvalidArgumentException(sprintf('External redirect to "%s" is not allowed.', $url));
+        }
+
         static::$is_redirect = true;
 
         return new Response(static::content($url), $status, ['Location' => $url]);
@@ -383,12 +387,12 @@ class Response
 </html>', htmlspecialchars($url, ENT_QUOTES, 'UTF-8'));
     }
 
-    public function download(string $filePath, ?string $fileName = null): void
+    public function download(string $filePath, ?string $fileName = null): self
     {
-        $this->file($filePath, false, $fileName);
+        return $this->file($filePath, false, $fileName);
     }
 
-    public function file(string $filePath, bool $inline = false, ?string $fileName = null): void
+    public function file(string $filePath, bool $inline = false, ?string $fileName = null): self
     {
         if (! is_file($filePath) || ! is_readable($filePath)) {
             throw new InvalidArgumentException(sprintf('File not found or not readable: "%s"', $filePath));
@@ -422,9 +426,9 @@ class Response
                 }
                 flush();
             }
-
-            $this->end();
         }
+
+        return $this;
     }
 
     protected function getMimeType(string $filePath): string|false

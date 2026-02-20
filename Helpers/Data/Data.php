@@ -11,7 +11,7 @@ declare(strict_types=1);
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
 
-namespace Helpers;
+namespace Helpers\Data;
 
 use ArrayAccess;
 use BadMethodCallException;

@@ -14,22 +14,21 @@ declare(strict_types=1);
 
 namespace Core;
 
+use Core\Events\KernelTerminateEvent;
 use Core\Ioc\ContainerInterface;
 use Core\Middleware\MiddlewarePipeline;
 use Core\Route\RouteMatch;
 use Core\Route\UrlResolver;
-use Defer\DeferredTaskTrait;
 use Helpers\File\Adapters\Interfaces\FileReadWriteInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
 use Helpers\Http\Flash;
 use Helpers\Http\Request;
 use Helpers\Http\Response;
+use Helpers\String\Inflector;
 
 class App
 {
-    use DeferredTaskTrait;
-
-    public const VERSION = '2.0.0';
+    public const VERSION = '2.1.0';
 
     private ContainerInterface $container;
 
@@ -59,7 +58,13 @@ class App
     public function run(): void
     {
         $this->handle($this->request)
-            ->complete(fn () => $this->executeDeferredTasks());
+            ->complete(function () {
+                Event::dispatch(new KernelTerminateEvent($this->request, $this->response));
+
+                if ($this->container->has(Kernel::class)) {
+                    $this->container->get(Kernel::class)->terminate();
+                }
+            });
     }
 
     public function handle(Request $request): Response
@@ -83,6 +88,8 @@ class App
         }
 
         $match = $resolvedRoute;
+
+        $this->hydrateRouteContext($this->request, $match);
 
         if ($this->request->isStateChanging()) {
             if (! $this->request->isSecurityValid()) {
@@ -133,6 +140,27 @@ class App
             ->send($this->request, $this->response)
             ->through($middlewares)
             ->then($dispatch);
+    }
+
+    private function hydrateRouteContext(Request $request, RouteMatch $match): void
+    {
+        $controller = $match->getController();
+        $method = $match->getMethod();
+
+        if (preg_match('/App\\\\([^\\\\]+)\\\\Controllers\\\\([^\\\\]+)Controller/', $controller, $matches)) {
+            $domain = $matches[1];
+            $entity = $matches[2];
+
+            $request->setRouteContext('domain', $domain);
+            $request->setRouteContext('entity', $entity);
+            $request->setRouteContext('resource', Inflector::pluralize(strtolower($entity)));
+            $request->setRouteContext('action', $method);
+        }
+
+        // Apply explicit context overrides from the route match if present
+        foreach ($match->getContext() as $key => $value) {
+            $request->setRouteContext($key, $value);
+        }
     }
 
     private function dispatch(RouteMatch $match): Response

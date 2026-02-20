@@ -19,7 +19,9 @@ use Queue\Enums\JobStatus;
 
 class QueuedJob extends BaseModel
 {
-    protected string $table = 'queued_job';
+    public const TABLE = 'queued_job';
+
+    protected string $table = self::TABLE;
 
     protected array $fillable = ['identifier', 'payload', 'status', 'response', 'failed', 'schedule', 'reserved_at'];
 

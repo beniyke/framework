@@ -10,14 +10,23 @@ declare(strict_types=1);
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
 
-use App\Services\Auth\Interfaces\AuthServiceInterface;
+use Helpers\Http\Request;
+use Security\Auth\Interfaces\AuthManagerInterface;
+use Security\Auth\Interfaces\GuardInterface;
 
 if (! function_exists('auth')) {
     /**
-     * Get the authentication service instance.
+     * Get the authentication manager instance.
      */
-    function auth(): AuthServiceInterface
+    function auth(?string $guard = null): AuthManagerInterface|GuardInterface
     {
-        return resolve(AuthServiceInterface::class);
+        $auth = resolve(AuthManagerInterface::class);
+
+        if (is_null($guard)) {
+            $request = resolve(Request::class);
+            $guard = $request->getRouteContext('auth_guard');
+        }
+
+        return $guard ? $auth->guard($guard) : $auth;
     }
 }

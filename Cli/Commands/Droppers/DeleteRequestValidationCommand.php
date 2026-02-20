@@ -29,6 +29,7 @@ class DeleteRequestValidationCommand extends Command
         $this->addArgument('validation_name', InputArgument::REQUIRED, 'Name Of the Request validation(s) to be Deleted (comma-separated).')
             ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Delete the Request Validation from.')
             ->addOption('type', 't', InputOption::VALUE_REQUIRED, 'The type of validation (form or api)')
+            ->addOption('with-dto', null, InputOption::VALUE_NONE, 'Also delete the associated Request DTO.')
             ->setName('validation:delete')
             ->setDescription('Deletes Existing Request validation(s).')
             ->setHelp('This command allows you to delete an existing Request Validation...' . PHP_EOL . 'Note: To delete a request validation from a module, first enter the name of the request validation(s), add a space, then the name of the module, and specify the type using --type=form or --type=api' . PHP_EOL . 'Example: php dock validation:delete Login Auth --type=form' . PHP_EOL . 'Use commas to delete multiple request validations. Omitting the module will attempt to delete global validations from "App/Validations".');
@@ -46,6 +47,7 @@ class DeleteRequestValidationCommand extends Command
         $validationNamesInput = $input->getArgument('validation_name');
         $moduleName = $input->getArgument('modulename');
         $validationType = $input->getOption('type');
+        $withDto = $input->getOption('with-dto');
 
         // Validate that --type option is provided
         if (! $validationType) {
@@ -74,6 +76,8 @@ class DeleteRequestValidationCommand extends Command
             $question = $this->deleteConfirmation();
 
             if ($io->askQuestion($question)) {
+                $withDto = $withDto ?: $io->confirm('Would you also like to delete the associated Request DTO(s)?', false);
+
                 $dropper = Droppers::getInstance();
                 $request_validations_name = explode(',', $validationNamesInput);
 
@@ -88,7 +92,7 @@ class DeleteRequestValidationCommand extends Command
 
                     $io->text(sprintf('   Attempting to delete: %s', $request_validation_name));
 
-                    $build = $dropper->requestValidation(strtolower($request_validation_name), strtolower($validationType), $moduleName);
+                    $build = $dropper->requestValidation(strtolower($request_validation_name), strtolower($validationType), $moduleName, $withDto);
 
                     if ($build['status']) {
                         $rows[] = ['✓', $request_validation_name, $build['message']];

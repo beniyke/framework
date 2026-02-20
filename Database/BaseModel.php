@@ -17,7 +17,6 @@ namespace Database;
 use Closure;
 use Database\Collections\LazyCollection;
 use Database\Collections\ModelCollection;
-use Database\Exceptions\ValidationException;
 use Database\Query\Builder;
 use Database\Relations\BaseRelation;
 use Database\Relations\BelongsTo;
@@ -27,6 +26,7 @@ use Database\Traits\HasFactory;
 use Database\Traits\HasRelations;
 use Database\Traits\SoftDeletes;
 use Debugger\Debugger;
+use Exceptions\ValidationException;
 use Helpers\DateTimeHelper;
 use Helpers\File\Cache;
 use JsonSerializable;
@@ -91,6 +91,8 @@ class BaseModel implements JsonSerializable
     protected static array $sortableColumns = ['id'];
 
     protected static array $booted = [];
+
+    protected static array $macros = [];
 
     protected static ?ModelValidator $validator = null;
 
@@ -1055,7 +1057,7 @@ class BaseModel implements JsonSerializable
     {
         $accessorMethod = 'get' . str_replace('_', '', ucwords($key, '_')) . 'Attribute';
 
-        if (method_exists($this, $accessorMethod)) {
+        if (method_exists($this, $accessorMethod) || isset(BaseModel::$macros[static::class][$accessorMethod])) {
             return $this->{$accessorMethod}();
         }
 
@@ -1067,7 +1069,7 @@ class BaseModel implements JsonSerializable
             return $this->relations[$key];
         }
 
-        if (method_exists($this, $key)) {
+        if (method_exists($this, $key) || isset(static::$macros[static::class][$key])) {
             if (static::$autoEagerLoadEnabled && $this->parentCollection instanceof ModelCollection) {
                 $this->parentCollection->loadMissing($key);
 
@@ -1112,6 +1114,13 @@ class BaseModel implements JsonSerializable
 
     public function __call(string $method, array $parameters): mixed
     {
+        if (isset(static::$macros[static::class][$method])) {
+            $macro = static::$macros[static::class][$method];
+            if ($macro instanceof Closure) {
+                return $macro->bindTo($this, static::class)(...$parameters);
+            }
+        }
+
         $scopeMethod = 'scope' . ucfirst($method);
 
         if (method_exists($this, $scopeMethod)) {
@@ -1126,6 +1135,11 @@ class BaseModel implements JsonSerializable
         }
 
         throw new RuntimeException("Method {$method} not found on " . static::class);
+    }
+
+    public static function macro(string $name, Closure $macro): void
+    {
+        self::$macros[static::class][$name] = $macro;
     }
 
     protected function getRelationQueryData(string $name): array
@@ -1176,6 +1190,15 @@ class BaseModel implements JsonSerializable
 
     protected function fireEvent(string $event): bool
     {
+        // Call local method hook if exists (e.g., onSaving)
+        $method = 'on' . ucfirst($event);
+        if (method_exists($this, $method)) {
+            if ($this->{$method}() === false) {
+                return false;
+            }
+        }
+
+        // Call registered listeners (Traits, global, etc)
         $listeners = static::$events[static::class][$event] ?? [];
         foreach ($listeners as $callback) {
             if ($callback($this) === false) {
@@ -1184,6 +1207,50 @@ class BaseModel implements JsonSerializable
         }
 
         return true;
+    }
+
+    /**
+     * Model hooks (Callbacks)
+     * These can be overridden in child models to react to lifecycle events.
+     */
+    protected function onRetrieved(): void
+    {
+    }
+
+    protected function onCreating(): ?bool
+    {
+        return true;
+    }
+
+    protected function onCreated(): void
+    {
+    }
+
+    protected function onUpdating(): ?bool
+    {
+        return true;
+    }
+
+    protected function onUpdated(): void
+    {
+    }
+
+    protected function onSaving(): ?bool
+    {
+        return true;
+    }
+
+    protected function onSaved(): void
+    {
+    }
+
+    protected function onDeleting(): ?bool
+    {
+        return true;
+    }
+
+    protected function onDeleted(): void
+    {
     }
 
     public static function creating(callable $callback): void

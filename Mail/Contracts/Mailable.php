@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Mail\Contracts;
 
-use Helpers\Data;
+use Helpers\Data\Data;
 use Mail\Core\EmailBuilder;
 
 interface Mailable

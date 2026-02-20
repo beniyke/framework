@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Debugger;
 
+use Core\Contracts\TerminableInterface;
 use Core\Ioc\ContainerInterface;
 use Core\Services\ConfigServiceInterface;
 use Core\Support\Adapters\Interfaces\EnvironmentInterface;
@@ -36,7 +37,7 @@ use Helpers\Http\Session;
 use InvalidArgumentException;
 use RuntimeException;
 
-class Debugger implements DebuggerInterface
+class Debugger implements DebuggerInterface, TerminableInterface
 {
     private static ?DebuggerInterface $instance = null;
 
@@ -120,6 +121,15 @@ class Debugger implements DebuggerInterface
     public function renderer(): JavascriptRenderer
     {
         return $this->renderer;
+    }
+
+    /**
+     * Reset the debugger state, clearing all collected data.
+     */
+    public function terminate(): void
+    {
+        $this->debugbar = new DebugBar();
+        $this->registerCollectors();
     }
 
     private function logWarning(string $message): void

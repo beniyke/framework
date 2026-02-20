@@ -14,12 +14,14 @@ namespace Database\Providers;
 
 use Cli\Build\DBA;
 use Cli\Helpers\CommandMapper;
+use Core\Contracts\TerminableInterface;
 use Core\Ioc\ContainerInterface;
 use Core\Services\CliServiceInterface;
 use Core\Services\ConfigServiceInterface;
 use Core\Services\ServiceProvider;
 use Core\Support\Adapters\Interfaces\SapiInterface;
 use Database\BaseModel;
+use Database\Connection;
 use Database\ConnectionConfig;
 use Database\ConnectionConfigInterface;
 use Database\ConnectionFactory;
@@ -33,7 +35,7 @@ use Helpers\File\Adapters\Interfaces\FileReadWriteInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
 use Helpers\File\Contracts\LoggerInterface;
 
-class DatabaseServiceProvider extends ServiceProvider
+class DatabaseServiceProvider extends ServiceProvider implements TerminableInterface
 {
     public function register(): void
     {
@@ -108,6 +110,11 @@ class DatabaseServiceProvider extends ServiceProvider
         DB::setDefaultConnection($connection);
         BaseModel::setConnection($connection);
 
+        $config = $this->container->get(ConfigServiceInterface::class);
+        if ($config->get('debug', false)) {
+            $connection::enableLogging();
+        }
+
         $operationConfig = $this->container->get(DatabaseOperationConfig::class);
         $thresholdMs = $operationConfig->getSlowQueryThreshold();
         $threshold = $thresholdMs / 1000;
@@ -120,5 +127,11 @@ class DatabaseServiceProvider extends ServiceProvider
                 'connection' => $logEntry['connection'],
             ]);
         });
+    }
+
+    public function terminate(): void
+    {
+        Connection::disableLogging();
+        Connection::clearQueryLog();
     }
 }

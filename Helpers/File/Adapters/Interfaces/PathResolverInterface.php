@@ -40,6 +40,8 @@ interface PathResolverInterface
 
     public function storagePath(?string $value = null): string;
 
+    public function logPath(?string $value = null): string;
+
     public function cachePath(?string $value = null): string;
 
     public function coreViewPath(?string $value = null): string;

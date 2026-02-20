@@ -24,5 +24,10 @@ interface DebuggerInterface
 
     public function renderer(): JavascriptRenderer;
 
+    /**
+     * Reset the debugger state, clearing all collected data.
+     */
+    public function terminate(): void;
+
     public function getDebugBar(): DebugBar;
 }

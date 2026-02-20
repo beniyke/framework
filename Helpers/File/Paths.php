@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Helpers\File;
 
+use RuntimeException;
+
 class Paths
 {
     private static string $basePath;
@@ -99,6 +101,11 @@ class Paths
         return self::basePath('public' . DIRECTORY_SEPARATOR . ($value ?? ''));
     }
 
+    public static function packagePath(?string $value = null): string
+    {
+        return self::basePath('packages' . DIRECTORY_SEPARATOR . ($value ?? ''));
+    }
+
     public static function storagePath(?string $value = null): string
     {
         return self::appPath('storage' . DIRECTORY_SEPARATOR . ($value ?? ''));
@@ -107,6 +114,11 @@ class Paths
     public static function cachePath(?string $value = null): string
     {
         return self::storagePath('cache' . DIRECTORY_SEPARATOR . ($value ?? ''));
+    }
+
+    public static function logPath(?string $value = null): string
+    {
+        return self::storagePath('logs' . DIRECTORY_SEPARATOR . ($value ?? ''));
     }
 
     public static function coreViewPath(?string $value = null): string
@@ -139,5 +151,22 @@ class Paths
     public static function dirname(string $path): string
     {
         return dirname($path);
+    }
+
+    /**
+     * Resolve a path and verify it remains within the root directory.
+     *
+     * @throws RuntimeException
+     */
+    public static function securePath(string $path, ?string $root = null): string
+    {
+        $root = $root ?? self::basePath();
+        $normalized = self::normalize($path);
+
+        if (! FileSystem::isWithin($normalized, $root)) {
+            throw new RuntimeException(sprintf('Path traversal attempt detected: "%s" is outside of "%s"', $path, $root));
+        }
+
+        return $normalized;
     }
 }

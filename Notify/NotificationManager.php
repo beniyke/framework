@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Notify;
 
+use Defer\Defer;
 use InvalidArgumentException;
 use Notify\Contracts\Channel;
 use Notify\Contracts\Notifiable;
@@ -47,7 +48,7 @@ class NotificationManager
 
     public function defer(string $channelName, Notifiable $notification, ?callable $before = null, ?callable $after = null): void
     {
-        defer(function () use ($channelName, $notification, $before, $after) {
+        Defer::push(function () use ($channelName, $notification, $before, $after) {
             $this->send($channelName, $notification, $before, $after);
         });
     }

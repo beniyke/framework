@@ -46,8 +46,8 @@ class ProviderManager
             throw new RuntimeException('Provider list is empty. Ensure the compiled configuration is loaded.');
         }
 
-        $this->registerImmediateProviders();
         $this->registerDeferredProviders();
+        $this->registerImmediateProviders();
 
         $this->bootProviders();
         $this->isBooted = true;
@@ -86,5 +86,17 @@ class ProviderManager
                 }
             }
         }
+    }
+
+    public function getLoadedProviderInstances(): array
+    {
+        $instances = [];
+        foreach ($this->providers as $provider_class) {
+            if ($this->container->has($provider_class)) {
+                $instances[] = $this->container->get($provider_class);
+            }
+        }
+
+        return $instances;
     }
 }

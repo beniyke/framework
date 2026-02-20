@@ -12,12 +12,20 @@ declare(strict_types=1);
 
 namespace Defer\Providers;
 
+use Core\Contracts\TerminableInterface;
 use Core\Services\DeferredServiceProvider;
 use Defer\Deferrer;
 use Defer\DeferrerInterface;
 
-class DeferServiceProvider extends DeferredServiceProvider
+class DeferServiceProvider extends DeferredServiceProvider implements TerminableInterface
 {
+    public function terminate(): void
+    {
+        if ($this->container->has(DeferrerInterface::class)) {
+            $this->container->get(DeferrerInterface::class)->terminate();
+        }
+    }
+
     public static function provides(): array
     {
         return [

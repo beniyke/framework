@@ -14,15 +14,12 @@ declare(strict_types=1);
 namespace Mail;
 
 use Mail\Contracts\Mailable;
+use Queue\Queue;
 
 class Mail
 {
     /**
      * Send an email using a Mailable object
-     *
-     * @param Mailable $mailable The mailable notification
-     *
-     * @return MailStatus Send result
      */
     public static function send(Mailable $mailable): MailStatus
     {
@@ -31,13 +28,18 @@ class Mail
 
     /**
      * Send an email deferred until after the response is sent.
-     *
-     * @param Mailable $mailable The mailable notification
-     *
-     * @return void
      */
     public static function deferred(Mailable $mailable): void
     {
         resolve(Mailer::class)->defer($mailable);
+    }
+
+    /**
+     * Queue an email task to be sent asynchronously.
+     * Use this to dispatch a task that extends BaseTask.
+     */
+    public static function queue(string $taskClass, mixed $data = [], string $queue = 'default'): void
+    {
+        Queue::deferred($taskClass, $data, $queue);
     }
 }

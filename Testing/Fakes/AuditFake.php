@@ -22,11 +22,22 @@ class AuditFake
             'user' => $user,
         ];
 
-        // Return a mock model or just null if allowed?
-        // AuditLog is usually returned.
         $mock = Mockery::mock(AuditLog::class);
 
         return $mock;
+    }
+
+    public function logModelEvent(
+        BaseModel $model,
+        string $event,
+        array $oldValues = [],
+        array $newValues = [],
+        ?User $user = null
+    ): AuditLog {
+        return $this->log($event, [
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
+        ], $model, $user);
     }
 
     public function getLogs(): array

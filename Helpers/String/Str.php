@@ -23,7 +23,7 @@ class Str
      */
     public static function refid(): string
     {
-        return static::random('alnum', 16);
+        return static::random('secure');
     }
 
     /**

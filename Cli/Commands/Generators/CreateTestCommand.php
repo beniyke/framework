@@ -29,7 +29,7 @@ class CreateTestCommand extends Command
         $this->setName('test:create')
             ->setDescription('Create a new test file')
             ->setHelp('This command creates a new Pest test file.')
-            ->addArgument('name', InputArgument::REQUIRED, 'The name of the test (e.g., UserServiceTest)')
+            ->addArgument('name', InputArgument::REQUIRED, 'The name of the test (e.g., UserTest)')
             ->addOption('unit', 'u', InputOption::VALUE_NONE, 'Create a unit test')
             ->addOption('feature', 'f', InputOption::VALUE_NONE, 'Create a feature test (default)')
             ->addOption('system', 's', InputOption::VALUE_NONE, 'Create a framework core (system) test')

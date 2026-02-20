@@ -12,11 +12,13 @@ declare(strict_types=1);
 
 namespace Queue;
 
-use Core\Services\ConfigServiceInterface;
+use Database\DB;
+use Defer\Defer;
 use Helpers\DateTimeHelper;
 use Queue\Interfaces\Queueable;
 use Queue\Models\QueuedJob;
 use RuntimeException;
+use Throwable;
 
 class QueueManager
 {
@@ -26,15 +28,12 @@ class QueueManager
 
     private ?DateTimeHelper $schedule = null;
 
-    private ?Queueable $taskInstance = null;
-
-    private ConfigServiceInterface $config;
-
     private Scheduler $scheduler;
 
-    public function __construct(ConfigServiceInterface $config, Scheduler $scheduler)
+    private ?Queueable $taskInstance = null;
+
+    public function __construct(Scheduler $scheduler)
     {
-        $this->config = $config;
         $this->scheduler = $scheduler;
     }
 
@@ -59,8 +58,8 @@ class QueueManager
 
         $this->taskInstance = $task;
 
-        // Use serialize for full object support
         $serializedData = serialize(is_object($data) ? clone $data : $data);
+
         if ($serializedData === false) {
             throw new RuntimeException('Failed to serialize task data.');
         }
@@ -85,10 +84,24 @@ class QueueManager
         return $this;
     }
 
-    public function queue(): QueuedJob
+    public function queue(): ?QueuedJob
     {
+        static $hasTable = null;
+
         if (! $this->payload) {
             throw new RuntimeException('Job payload has not been set. Call job() before queue().');
+        }
+
+        if ($hasTable === null) {
+            try {
+                $hasTable = DB::connection()->tableExists(QueuedJob::TABLE);
+            } catch (Throwable $e) {
+                $hasTable = false;
+            }
+        }
+
+        if (! $hasTable) {
+            return null;
         }
 
         $schedule = $this->schedule ?? DateTimeHelper::now();
@@ -105,7 +118,7 @@ class QueueManager
 
     public function defer(): void
     {
-        defer(function () {
+        Defer::push(function () {
             $this->queue();
         });
     }

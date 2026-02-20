@@ -21,8 +21,11 @@ class MaintenanceFirewall extends BaseFirewall
     public function handle(): void
     {
         $maintenance = $this->getConfig('maintenance');
+        $resource = $this->request->getRouteContext('resource');
+        $is_locked_resource = ! empty($maintenance['locked_resources']) && in_array($resource, $maintenance['locked_resources'], true);
 
-        if (! $maintenance['enable']) {
+        // Block if global maintenance is enabled OR specific resource is locked
+        if (! $maintenance['enable'] && ! $is_locked_resource) {
             return;
         }
 
@@ -30,16 +33,20 @@ class MaintenanceFirewall extends BaseFirewall
         $block_conditions = $this->checkBlockConditions($maintenance, $agent);
         $agent_allowed = empty($block_conditions);
         $route_allowed = $this->routeExists($maintenance['allow']['routes'], $this->request->route());
-        $allow = $agent_allowed && $route_allowed;
+
+        // Final allow condition:
+        // Must be on an allowed route AND satisfy agent conditions
+        $allow = $route_allowed && $agent_allowed;
 
         if (! $allow) {
-            $this->auditTrail('Access denied. Under maintenance.');
+            $message = $is_locked_resource ? "The {$resource} module is temporarily under maintenance." : 'Under maintenance.';
+            $this->auditTrail("Access denied. {$message}");
 
             $is_api = $this->request->routeIsApi();
             $statusCode = 503;
 
             if ($is_api) {
-                $response = $this->getJsonResponsePayload(['message' => 'Under Maintenance. Service Unavailable'], $statusCode);
+                $response = $this->getJsonResponsePayload(['message' => "{$message} Service Unavailable"], $statusCode);
             } else {
                 $response = $this->getViewResponsePayload('maintenance.html', $statusCode);
             }

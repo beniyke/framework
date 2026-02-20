@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Core;
 
+use Core\Events\ConsoleTerminateEvent;
 use Core\Ioc\ContainerInterface;
 use Core\Support\Adapters\Interfaces\SapiInterface;
-use Defer\DeferredTaskTrait;
 use Helpers\File\Adapters\Interfaces\FileMetaInterface;
 use Helpers\File\Adapters\Interfaces\FileReadWriteInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
@@ -26,8 +26,6 @@ use Throwable;
 
 class Console
 {
-    use DeferredTaskTrait;
-
     private const NAME = 'Anchor Console (Dock) by BenIyke';
 
     public function getVersion(): string
@@ -47,8 +45,13 @@ class Console
 
     private array $excluded = ['AbstractCommand'];
 
-    public function __construct(PathResolverInterface $paths, FileMetaInterface $fileMeta, FileReadWriteInterface $fileReadWrite, SapiInterface $sapi, ContainerInterface $container)
-    {
+    public function __construct(
+        PathResolverInterface $paths,
+        FileMetaInterface $fileMeta,
+        FileReadWriteInterface $fileReadWrite,
+        SapiInterface $sapi,
+        ContainerInterface $container
+    ) {
         $this->paths = $paths;
         $this->fileMeta = $fileMeta;
         $this->fileReadWrite = $fileReadWrite;
@@ -77,13 +80,13 @@ class Console
         }
 
         $app->run();
-        $this->executeDeferredTasks();
+        Event::dispatch(new ConsoleTerminateEvent());
     }
 
     private function ensureCliEnvironment(): void
     {
         if ($this->sapi->isCgi()) {
-            exit("This CLI tool requires the PHP CLI (not php-cgi).\n");
+            exit("This CLI tool requires the PHP CLI (not php-cgi)." . PHP_EOL);
         }
     }
 
@@ -91,7 +94,7 @@ class Console
     {
         $commands = [];
 
-        // 1. Discover System Module Commands (System/*/Commands)
+        // Discover System Commands (System/*/Commands)
         $systemPath = $this->paths->systemPath();
         $systemModules = $this->discoverSubdirectories($systemPath);
 
@@ -108,7 +111,7 @@ class Console
             }
         }
 
-        // 2. Discover CLI Commands (System/Cli/Commands/*)
+        // Discover CLI Commands (System/Cli/Commands/*)
         $cliCommandsPath = $this->paths->cliPath('Commands');
         $cli_directories = $this->discoverSubdirectories($cliCommandsPath);
 
@@ -123,7 +126,24 @@ class Console
             }
         }
 
-        // 3. Discover App Commands (App/Commands)
+        // Discover (Internal) App Commands (App/src/*/Commands)
+        $appSourcePath = $this->paths->appSourcePath();
+        if ($this->fileMeta->isDir($appSourcePath)) {
+            $appSrcModules = $this->discoverSubdirectories($appSourcePath);
+            foreach ($appSrcModules as $module) {
+                $moduleCommandsPath = $appSourcePath . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'Commands';
+                if ($this->fileMeta->isDir($moduleCommandsPath)) {
+                    foreach ($this->discoverClassNames($moduleCommandsPath) as $class) {
+                        $fqcn = $this->qualify("{$module}\\Commands\\{$class}");
+                        if ($this->isValidCommand($fqcn)) {
+                            $commands[] = $fqcn;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Discover App Commands (App/Commands)
         $appCommandsPath = $this->paths->appPath('Commands');
         foreach ($this->discoverClassNames($appCommandsPath) as $class) {
             $fqcn = $this->qualify("App\\Commands\\{$class}");
@@ -132,7 +152,7 @@ class Console
             }
         }
 
-        // 4. Discover Custom Package Commands (packages/*/Commands)
+        // Discover Custom Package Commands (packages/*/Commands)
         $packagesPath = $this->paths->basePath('packages');
         if ($this->fileMeta->isDir($packagesPath)) {
             $packages = $this->discoverSubdirectories($packagesPath);
@@ -179,10 +199,7 @@ class Console
             return [];
         }
 
-        return array_filter(
-            scandir($path),
-            fn ($item) => $item !== '.' && $item !== '..' && $this->fileMeta->isDir($path . DIRECTORY_SEPARATOR . $item)
-        );
+        return array_filter(scandir($path), fn ($item) => $item !== '.' && $item !== '..' && $this->fileMeta->isDir($path . DIRECTORY_SEPARATOR . $item));
     }
 
     private function discoverClassNames(string $path): array

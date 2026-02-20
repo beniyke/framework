@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Core\Route;
 
-use Helpers\DTO;
+use Helpers\Data\DTO;
 
 class RouteMatch extends DTO
 {
@@ -23,6 +23,8 @@ class RouteMatch extends DTO
     private readonly array $parameters;
 
     private readonly array $middleware;
+
+    private readonly array $context;
 
     public function getController(): string
     {
@@ -42,5 +44,10 @@ class RouteMatch extends DTO
     public function getMiddleware(): array
     {
         return $this->middleware;
+    }
+
+    public function getContext(): array
+    {
+        return $this->context;
     }
 }

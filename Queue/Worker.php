@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Queue;
 
+use Core\Kernel;
 use Core\Support\Adapters\Interfaces\OSCheckerInterface;
 use Helpers\File\Contracts\CacheInterface;
 use Queue\Interfaces\QueueDispatcherInterface;
@@ -265,6 +266,15 @@ class Worker
             $callback('started', $jobData);
         }
 
+        $kernel = null;
+        if (function_exists('resolve')) {
+            try {
+                $kernel = resolve(Kernel::class);
+            } catch (Throwable $e) {
+                // Ignore if kernel cannot be resolved
+            }
+        }
+
         try {
             echo 'Processing task in child process (PID: ' . getmypid() . ") for queue '{$this->queueName}'." . PHP_EOL;
 
@@ -296,6 +306,10 @@ class Worker
             $jobData['error'] = $e->getMessage();
             foreach (self::$jobCallbacks as $callback) {
                 $callback('failed', $jobData);
+            }
+        } finally {
+            if (isset($kernel)) {
+                $kernel->terminate();
             }
         }
     }

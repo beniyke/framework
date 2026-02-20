@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Mail;
 
 use Core\Services\ConfigServiceInterface;
+use Defer\Defer;
 use InvalidArgumentException;
 use Mail\Contracts\Mailable;
 use Mail\Contracts\MailDriverInterface;
@@ -52,7 +53,7 @@ class Mailer
 
     public function defer(Mailable $notification): void
     {
-        defer(function () use ($notification) {
+        Defer::push(function () use ($notification) {
             $this->send($notification);
         });
     }

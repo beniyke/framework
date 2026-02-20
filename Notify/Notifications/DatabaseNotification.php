@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Notify\Notifications;
 
-use Helpers\Data;
+use Helpers\Data\Data;
 use Notify\Contracts\DatabaseNotifiable;
 
 abstract class DatabaseNotification implements DatabaseNotifiable

@@ -32,4 +32,18 @@ abstract class ServiceProvider implements ServiceProviderInterface
     public function boot(): void
     {
     }
+
+    /**
+     * Load a helper file from the given path.
+     *
+     * @param string $path
+     *
+     * @return void
+     */
+    protected function loadHelpers(string $path): void
+    {
+        if (file_exists($path)) {
+            require_once $path;
+        }
+    }
 }

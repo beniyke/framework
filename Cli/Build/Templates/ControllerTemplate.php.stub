@@ -33,23 +33,14 @@ class {controllername} extends BaseController
     /**
      * Store a new resource.
      */
-    public function store({requestValidationName} $validator): Response
+    public function store(): Response
     {
         if (!$this->request->isPut()) {
             return $this->response->redirect($this->request->callback());
         }
 
-        $formdata = $this->request->post();
-        $validator->validate($formdata);
-
-        if ($validator->has_error()) {
-            $this->flash->error($validator->errors());
-            return $this->response->redirect($this->request->callback());
-        }
-
-        $request = $validator->getRequest();
-
-        // Continue with your logic: Interaction with the model to create the resource.
+        // Smart Validation has already run. You can access validated data via $this->request->validated()
+        // Interaction with the model to create the resource.
         $created = true; // Simulated operation result.
 
         if (!$created) {
@@ -64,23 +55,14 @@ class {controllername} extends BaseController
     /**
      * Update an existing resource.
      */
-    public function update({requestValidationName} $validator): Response
+    public function update(): Response
     {
         if (!$this->request->isPatch()) {
             return $this->response->redirect($this->request->callback());
         }
 
-        $formdata = $this->request->post();
-        $validator->validate($formdata);
-
-        if ($validator->has_error()) {
-            $this->flash->error($validator->errors());
-            return $this->response->redirect($this->request->callback());
-        }
-
-        $request = $validator->getRequest();
-
-        // Continue with your logic: Interaction with the model to update the resource.
+        // Smart Validation has already run. You can access validated data via $this->request->validated()
+        // Interaction with the model to update the resource.
         $updated = true; // Simulated operation result.
 
         if (!$updated) {
@@ -101,7 +83,7 @@ class {controllername} extends BaseController
             return $this->response->redirect($this->request->callback());
         }
 
-        // Continue with your logic: Interaction with the model to delete the resource.
+        // Interaction with the model to delete the resource.
         $deleted = true; // Simulated operation result.
 
         if (!$deleted) {
@@ -113,4 +95,3 @@ class {controllername} extends BaseController
         return $this->response->redirect($this->request->fullRoute());
     }
 }
-

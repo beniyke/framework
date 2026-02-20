@@ -102,6 +102,7 @@ trait RouteTrait
         $current_route = $this->route();
 
         $middleware_name = null;
+
         foreach ($resolved_routes as $middleware => $routes) {
             if ($this->routeExist($routes, $current_route)) {
                 $middleware_name = $middleware;
@@ -178,7 +179,7 @@ trait RouteTrait
 
         preg_match_all('/(?:\s*)([^,}]+)(?:\s*)(?:,|})/', $parts[1], $matches);
 
-        return array_map(fn ($match) => $parts[0].trim($match), $matches[1]);
+        return array_map(fn ($match) => $parts[0] . trim($match), $matches[1]);
     }
 
     private static function split(string $string): array

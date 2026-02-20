@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Notify\Notifications;
 
-use Helpers\Data;
+use Helpers\Data\Data;
 use Notify\Contracts\MessageNotifiable;
 
 abstract class MessageNotification implements MessageNotifiable

@@ -26,7 +26,15 @@ interface FileMetaInterface
 
     public function size(string $path): int;
 
+    public function directorySize(string $path): int;
+
     public function chmod(string $path, int $permission): bool;
+
+    public function lastModified(string $path): int;
+
+    public function mimeType(string $path): string;
+
+    public function extension(string $path): string;
 
     public function permissions(string $path): string;
 }

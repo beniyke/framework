@@ -21,6 +21,7 @@ use Cli\Build\Traits\Notification\GenerateNotificationTrait;
 use Cli\Build\Traits\Provider\GenerateProviderTrait;
 use Cli\Build\Traits\Request\GenerateRequestTrait;
 use Cli\Build\Traits\Resource\GenerateResourceTrait;
+use Cli\Build\Traits\Schedule\GenerateScheduleTrait;
 use Cli\Build\Traits\Service\GenerateServiceTrait;
 use Cli\Build\Traits\Task\GenerateTaskTrait;
 use Cli\Build\Traits\Validation\GenerateValidationTrait;
@@ -42,6 +43,7 @@ class Generators
     use GenerateProviderTrait;
     use GenerateRequestTrait;
     use GenerateResourceTrait;
+    use GenerateScheduleTrait;
     use GenerateServiceTrait;
     use GenerateTaskTrait;
     use GenerateTemplateTrait;

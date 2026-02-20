@@ -327,12 +327,7 @@ class Container implements ContainerInterface
         foreach ($dependencyMetadata as $meta) {
             if ($meta['type'] === 'given') {
                 $dependencies[] = $givenParameters[$meta['name']];
-            } elseif ($meta['type'] === 'value') {
-                $dependencies[] = $meta['value'];
-            } elseif ($meta['type'] === 'cast') {
-                // For 'cast' types, we don't try to re-instantiate ReflectionNamedType
-                // We just use the value as is or implement a string-based cast if needed.
-                // Given the current implementation, returning the value is safest.
+            } elseif ($meta['type'] === 'value' || $meta['type'] === 'cast') {
                 $dependencies[] = $meta['value'];
             } else {
                 $serviceId = $meta['typeName'] ?? null;
@@ -496,6 +491,27 @@ class Container implements ContainerInterface
         $dependencies = $this->resolveDependenciesForMethod($constructor, $parameters);
 
         return $reflector->newInstanceArgs($dependencies);
+    }
+
+    public function extend(string $abstract, Closure $closure): void
+    {
+        if (isset($this->deferred[$abstract])) {
+            $this->registerProvider($this->deferred[$abstract]);
+        }
+
+        if (isset($this->cache[$abstract])) {
+            $this->cache[$abstract] = $closure($this->cache[$abstract], $this);
+        }
+
+        if (isset($this->bindings[$abstract])) {
+            $concrete = $this->bindings[$abstract]['concrete'];
+
+            $this->bindings[$abstract]['concrete'] = function ($container) use ($concrete, $closure) {
+                $instance = $concrete instanceof Closure ? $concrete($container) : $container->build($concrete);
+
+                return $closure($instance, $container);
+            };
+        }
     }
 
     public static function getResolvedInstance(): ContainerInterface

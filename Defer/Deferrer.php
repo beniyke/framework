@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Defer;
 
-class Deferrer implements DeferrerInterface
+use Core\Contracts\TerminableInterface;
+
+class Deferrer implements DeferrerInterface, TerminableInterface
 {
     private array $payloads = [];
 
@@ -21,6 +23,12 @@ class Deferrer implements DeferrerInterface
 
     public function __construct()
     {
+    }
+
+    public function terminate(): void
+    {
+        $this->payloads = [];
+        $this->current_name = 'default';
     }
 
     public function name(string $name): self

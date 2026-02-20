@@ -15,14 +15,15 @@ declare(strict_types=1);
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
 
-namespace Helpers;
+namespace Helpers\Data;
 
+use Helpers\Data\Contracts\DataTransferObject;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionType;
 use stdClass;
 
-class DTO
+class DTO implements DataTransferObject
 {
     private array $errors = [];
 

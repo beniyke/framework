@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
 
-use Helpers\Data;
+use Helpers\Data\Data;
 use Helpers\Validation\Validator;
 
 if (! function_exists('data')) {

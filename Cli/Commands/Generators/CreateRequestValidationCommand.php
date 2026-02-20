@@ -28,6 +28,7 @@ class CreateRequestValidationCommand extends Command
         $this->addArgument('validation_name', InputArgument::REQUIRED, 'Name Of The Request Validation to Generate.')
             ->addArgument('modulename', InputArgument::OPTIONAL, 'Name Of The Module to Generate The Request Validation to.')
             ->addOption('type', 't', InputOption::VALUE_REQUIRED, 'The type of validation (form or api)')
+            ->addOption('no-dto', null, InputOption::VALUE_NONE, 'Do not generate an associated Request DTO.')
             ->setName('validation:create')
             ->setDescription('Creates new Request Validation.')
             ->setHelp('This command allows you to create a new Request Validation...' . PHP_EOL . 'Note: To create a Request Validation for a module, first enter the name of the Request Validation, add a space, then the name of the module, and specify the type using --type=form or --type=api' . PHP_EOL . 'Example: php dock validation:create Login Auth --type=form');
@@ -40,6 +41,7 @@ class CreateRequestValidationCommand extends Command
         $validationName = $input->getArgument('validation_name');
         $moduleName = $input->getArgument('modulename');
         $validationType = $input->getOption('type');
+        $withDto = ! $input->getOption('no-dto');
 
         // Validate that --type option is provided
         if (! $validationType) {
@@ -67,7 +69,7 @@ class CreateRequestValidationCommand extends Command
         try {
             $generator = Generators::getInstance();
             $io->text('Generating Request Validation file...');
-            $build = $generator->requestValidation($validationName, strtolower($validationType), $moduleName);
+            $build = $generator->requestValidation($validationName, strtolower($validationType), $moduleName, $withDto);
 
             if ($build['status']) {
                 $io->success($build['message']);

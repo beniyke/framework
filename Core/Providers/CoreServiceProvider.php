@@ -14,6 +14,8 @@ namespace Core\Providers;
 
 use Core\Console;
 use Core\Ioc\ContainerInterface;
+use Core\Services\BackgroundDispatcher;
+use Core\Services\BackgroundDispatcherInterface;
 use Core\Services\CliService;
 use Core\Services\CliServiceInterface;
 use Core\Services\ConfigService;
@@ -30,6 +32,8 @@ use Helpers\File\Adapters\Interfaces\FileReadWriteInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
 use Helpers\File\Contracts\LoggerInterface;
 use Helpers\File\FileLogger;
+use Security\Auth\AuthManager;
+use Security\Auth\Interfaces\AuthManagerInterface;
 
 class CoreServiceProvider extends ServiceProvider
 {
@@ -65,5 +69,8 @@ class CoreServiceProvider extends ServiceProvider
 
             return $cliService;
         });
+
+        $this->container->singleton(AuthManagerInterface::class, AuthManager::class);
+        $this->container->singleton(BackgroundDispatcherInterface::class, BackgroundDispatcher::class);
     }
 }

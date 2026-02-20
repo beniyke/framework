@@ -13,8 +13,8 @@ declare(strict_types=1);
 namespace Helpers\Html;
 
 use Exception;
+use Helpers\File\Adapters\Interfaces\PathResolverInterface;
 use Helpers\File\FileSystem;
-use Helpers\File\Paths;
 use Helpers\Http\Flash;
 
 class HtmlComponent
@@ -29,16 +29,19 @@ class HtmlComponent
 
     private bool $path_resolved = false;
 
+    private PathResolverInterface $paths;
+
     private Flash $flash;
 
     private ?string $fieldName = null;
 
-    public function __construct(Flash $flash, string $name)
+    public function __construct(Flash $flash, string $name, ?PathResolverInterface $paths = null)
     {
         $this->flash = $flash;
         $this->name = $name;
+        $this->paths = $paths ?? resolve(PathResolverInterface::class);
 
-        $systemPath = Paths::systemPath('Helpers/Html/components/' . $name);
+        $systemPath = $this->paths->systemPath('Helpers/Html/components/' . $name);
         $resolvedSystemPath = $this->resolveExtension($systemPath);
 
         if (FileSystem::exists($resolvedSystemPath)) {
@@ -48,7 +51,7 @@ class HtmlComponent
             return;
         }
 
-        $templatePath = Paths::templatePath('components/' . $name);
+        $templatePath = $this->paths->templatePath('components/' . $name);
         $resolvedTemplatePath = $this->resolveExtension($templatePath);
 
         if (FileSystem::exists($resolvedTemplatePath)) {
@@ -63,7 +66,7 @@ class HtmlComponent
 
     public function path(string $path): self
     {
-        $newPath = Paths::templatePath('components/' . $this->name, $path);
+        $newPath = $this->paths->templatePath('components/' . $this->name, $path);
         $this->componentFile = $this->resolveExtension($newPath);
         $this->path_resolved = FileSystem::exists($this->componentFile);
 

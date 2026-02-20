@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Commands;
+namespace {namespace};
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;

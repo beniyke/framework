@@ -14,20 +14,21 @@ declare(strict_types=1);
 namespace Security\Firewall\Drivers;
 
 use Core\Services\ConfigServiceInterface;
-use Helpers\Data;
+use Helpers\Data\Data;
 use Helpers\DateTimeHelper;
 use Helpers\File\Contracts\CacheInterface;
 use Helpers\File\Paths;
 use Helpers\Http\Flash;
 use Helpers\Http\Request;
 use Helpers\Http\UserAgent;
-use Notify\Notifier;
+use Mail\Mail;
 use Security\Firewall\Notifications\FirewallEmailNotification;
 use Security\Firewall\Throttling\Throttler;
 
 abstract class BaseFirewall
 {
     protected const FIREWALL_PATH = 'firewall';
+
     protected const AUDIT_CACHE_DURATION_SECONDS = 172800;
 
     protected bool $is_blocked = false;
@@ -40,20 +41,17 @@ abstract class BaseFirewall
 
     protected UserAgent $agent;
 
-    protected Notifier $notifier;
-
     protected Request $request;
 
     protected Flash $flash;
 
     protected Throttler $throttler;
 
-    public function __construct(ConfigServiceInterface $config, CacheInterface $cache, UserAgent $agent, Notifier $notifier, Request $request, Flash $flash, Throttler $throttler)
+    public function __construct(ConfigServiceInterface $config, CacheInterface $cache, UserAgent $agent, Request $request, Flash $flash, Throttler $throttler)
     {
         $this->config = $config;
         $this->cache = $cache;
         $this->agent = $agent;
-        $this->notifier = $notifier;
         $this->request = $request;
         $this->flash = $flash;
         $this->throttler = $throttler;
@@ -97,16 +95,12 @@ abstract class BaseFirewall
 
         $notification = $this->getConfig('notification');
 
-        defer(function () use ($data, $notification) {
-            if ($notification['mail']['status']) {
-                $payload['to'] = $notification['mail']['to'];
-                $payload['data'] = $data;
+        if ($notification['mail']['status']) {
+            $payload['to'] = $notification['mail']['to'];
+            $payload['data'] = $data;
 
-                $this->notifier->channel('email')
-                    ->with(FirewallEmailNotification::class, Data::make($payload))
-                    ->send();
-            }
-        });
+            Mail::deferred(new FirewallEmailNotification(Data::make($payload)));
+        }
     }
 
     private static function getFirewallName(): string

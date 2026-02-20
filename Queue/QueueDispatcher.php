@@ -15,7 +15,7 @@ namespace Queue;
 use Core\Services\ConfigServiceInterface;
 use Database\DB;
 use Exception;
-use Helpers\Data;
+use Helpers\Data\Data;
 use Helpers\File\Contracts\CacheInterface;
 use Queue\Enums\JobStatus;
 use Queue\Interfaces\JobServiceInterface;
@@ -166,18 +166,16 @@ class QueueDispatcher implements QueueDispatcherInterface
             throw new RuntimeException('Task class does not exist: ' . $taskClass);
         }
 
-        // Unserialize with allowed classes for security
-        $allowedClasses = [$taskClass, 'stdClass'];
-
-        $taskData = @unserialize($payload->data, ['allowed_classes' => $allowedClasses]);
+        // For security, only allow primitive types to be reconstructed during unserialization.
+        $taskData = @unserialize($payload->data, ['allowed_classes' => false]);
 
         if ($taskData === false && $payload->data !== 'b:0;') {
             throw new RuntimeException('Failed to unserialize task data.');
         }
 
-        $payload = Data::make($taskData);
+        $taskData = Data::make($taskData);
 
-        $taskInstance = new $taskClass($payload);
+        $taskInstance = new $taskClass($taskData);
         $response = $taskInstance->run();
 
         if (($response->status ?? JobStatus::Success->value) === JobStatus::Failed->value) {
@@ -218,9 +216,8 @@ class QueueDispatcher implements QueueDispatcherInterface
     private function deferTask(object $payload): void
     {
         DB::afterCommit(function () use ($payload) {
-            // Unserialize with allowed classes
-            $allowedClasses = [$payload->namespace, 'stdClass'];
-            $originalData = @unserialize($payload->data, ['allowed_classes' => $allowedClasses]);
+            // Unserialize data ensuring no object reconstruction as a security measure.
+            $originalData = @unserialize($payload->data, ['allowed_classes' => false]);
 
             if ($originalData === false && $payload->data !== 'b:0;') {
                 throw new RuntimeException('Failed to unserialize deferred task data.');

@@ -20,7 +20,7 @@ class FileLogger implements LoggerInterface
 
     public static array $logCallbacks = [];
 
-    private const DEFAULT_LOG_FILE = 'App/storage/logs/anchor.log';
+    private const DEFAULT_LOG_FILE = 'anchor.log';
 
     public function __construct(?string $logFile = null)
     {
@@ -34,11 +34,17 @@ class FileLogger implements LoggerInterface
      */
     public function setLogFile(string $logFile): self
     {
-        $path = Paths::basePath($logFile);
+        // If it's not an absolute path, resolve it relative to logs directory
+        if (! str_starts_with($logFile, DIRECTORY_SEPARATOR) && ! (strlen($logFile) > 2 && $logFile[1] === ':')) {
+            $path = Paths::logPath($logFile);
+        } else {
+            $path = $logFile;
+        }
+
         $directory = dirname($path);
 
         FileSystem::mkdir($directory);
-        $this->logFile = $logFile;
+        $this->logFile = $path;
 
         return $this;
     }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Helpers\Http;
 
+use Closure;
 use Core\Route\Traits\RouteTrait;
 use Core\Services\ConfigServiceInterface;
 use Core\Support\Adapters\Interfaces\SapiInterface;
@@ -90,7 +91,17 @@ class Request
 
     private mixed $authenticatedUser = null;
 
+    private array $routeContext = [];
+
     private ?string $authenticatedToken = null;
+
+    private ?object $validatedRequest = null;
+
+    private ?Closure $validatorResolver = null;
+
+    private ?Closure $validationFailureHandler = null;
+
+    private bool $validationPerformed = false;
 
     public function __construct(array $server_data, array $get_data, array $post_data, array $file_data, array $cookie_data, ConfigServiceInterface $config, SapiInterface $sapi, Session $session, $agent, ?string $stream = null)
     {
@@ -315,6 +326,26 @@ class Request
         return $this->method() === self::METHOD_OPTIONS;
     }
 
+    public function isPostOrPut(): bool
+    {
+        return $this->isPost() || $this->isPut();
+    }
+
+    public function isPostOrPatch(): bool
+    {
+        return $this->isPost() || $this->isPatch();
+    }
+
+    public function isPutOrPatch(): bool
+    {
+        return $this->isPut() || $this->isPatch();
+    }
+
+    public function is(string ...$methods): bool
+    {
+        return in_array(strtoupper($this->method()), array_map('strtoupper', $methods));
+    }
+
     public function isStateChanging(): bool
     {
         $method = $this->method();
@@ -407,6 +438,21 @@ class Request
         $uri = preg_replace('/\+/', '/', ($this->server('REQUEST_URI') ?? ''));
 
         return $this->stripCommonPrefix($uri, $this->path());
+    }
+
+    public function segments(): array
+    {
+        return array_values(array_filter(explode('/', trim(explode('?', $this->uri())[0], '/'))));
+    }
+
+    /**
+     * Get a specific segment from the URI (1-indexed).
+     */
+    public function segment(int $index, mixed $default = null): mixed
+    {
+        $segments = $this->segments();
+
+        return $segments[$index - 1] ?? $default;
     }
 
     public function config(string $key): mixed
@@ -546,11 +592,11 @@ class Request
             $this->session->set(self::CSRF_TOKEN, null);
         }
 
-        if ($this->config('csrf.origin_check') && sha1($this->server('REMOTE_ADDR') . $this->server('HTTP_USER_AGENT')) != substr(base64_decode($hash), 10, 40)) {
+        if ($this->config('csrf.origin_check') && ! hash_equals(sha1($this->server('REMOTE_ADDR') . $this->server('HTTP_USER_AGENT')), (string)substr(base64_decode($hash), 10, 40))) {
             return false;
         }
 
-        if ($this->csrf_token != $hash || $this->csrfTokenHasExpired($this->csrf_token)) {
+        if (! hash_equals((string)$this->csrf_token, (string)$hash) || $this->csrfTokenHasExpired($this->csrf_token)) {
             return false;
         }
 
@@ -913,6 +959,36 @@ class Request
         return $this->authenticatedUser;
     }
 
+    /**
+     * Set a route context value.
+     */
+    public function setRouteContext(string $key, mixed $value): self
+    {
+        $this->routeContext[$key] = $value;
+
+        return $this;
+    }
+
+    public function getRouteContext(string $key, mixed $default = null): mixed
+    {
+        return $this->routeContext[$key] ?? $default;
+    }
+
+    public function allRouteContext(): array
+    {
+        return $this->routeContext;
+    }
+
+    public function setRoutePermission(string $permission): self
+    {
+        return $this->setRouteContext('permission', $permission);
+    }
+
+    public function getRoutePermission(): ?string
+    {
+        return $this->getRouteContext('permission');
+    }
+
     public function setAuthToken(string $token): self
     {
         $this->authenticatedToken = $token;
@@ -944,5 +1020,71 @@ class Request
         $new->body = $body;
 
         return $new;
+    }
+
+    public function isInternalUrl(string $url): bool
+    {
+        if (str_starts_with($url, '/') || ! str_contains($url, '://')) {
+            return true;
+        }
+
+        $base = $this->baseurl();
+        if ($base && str_starts_with($url, $base)) {
+            return true;
+        }
+
+        $host = $this->server('HTTP_HOST');
+        if ($host) {
+            $parsed = parse_url($url);
+
+            return isset($parsed['host']) && $parsed['host'] === $host;
+        }
+
+        return false;
+    }
+
+    public function setValidatedRequest(object $dto): void
+    {
+        $this->validatedRequest = $dto;
+    }
+
+    public function validated(): ?object
+    {
+        return $this->validatedRequest;
+    }
+
+    public function setValidatorResolver(Closure $resolver): void
+    {
+        $this->validatorResolver = $resolver;
+    }
+
+    public function setValidationFailureHandler(Closure $handler): void
+    {
+        $this->validationFailureHandler = $handler;
+    }
+
+    public function validateUsing(string $class): self
+    {
+        if ($this->validatorResolver) {
+            $validator = ($this->validatorResolver)($class);
+            $validator->validate($this->all());
+
+            if ($validator->has_error() && $this->validationFailureHandler) {
+                ($this->validationFailureHandler)($this, $validator);
+            }
+
+            if (method_exists($validator, 'getRequest')) {
+                $this->setValidatedRequest($validator->getRequest());
+            }
+        }
+
+        $this->validationPerformed = true;
+
+        return $this;
+    }
+
+    public function validationAlreadyPerformed(): bool
+    {
+        return $this->validationPerformed;
     }
 }

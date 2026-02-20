@@ -34,7 +34,7 @@ class CommandMapper
 
     public function requiresDatabaseConnection(string $commandName): bool
     {
-        if (env('APP_ENV') === 'testing') {
+        if (config('env') === 'testing') {
             return true;
         }
 
@@ -45,7 +45,7 @@ class CommandMapper
 
     public function isRunningTest(string $commandName): bool
     {
-        if (env('APP_ENV') === 'testing') {
+        if (config('env') === 'testing') {
             return true;
         }
 

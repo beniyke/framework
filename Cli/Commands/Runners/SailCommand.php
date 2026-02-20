@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Cli\Commands\Runners;
 
+use Core\Ioc\Container;
+use Security\ProductionScanner;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -24,6 +26,7 @@ class SailCommand extends Command
     {
         $this->setName('sail')
             ->setDescription('Run comprehensive pre-flight checks to ensure production readiness.')
+            ->addOption('dev', null, null, 'Run in development mode (relaxes environment checks)')
             ->setHelp('This command runs repair checks, style inspections, and unit tests to ensure production readiness.');
     }
 
@@ -36,7 +39,31 @@ class SailCommand extends Command
             return Command::FAILURE;
         }
 
-        $io->section('1. Integrity & Style Inspection');
+        $io->section('1. Security Audit');
+        $io->text('Checking for known vulnerabilities in dependencies...');
+
+        $isDev = (bool) $input->getOption('dev');
+
+        if (! $this->runStep($io, $output, 'composer audit', 'Security Audit')) {
+            if (! $isDev) {
+                return Command::FAILURE;
+            }
+            $io->warning('Security Audit failed, but continuing because dev mode is enabled.');
+        }
+
+        // Production Scanner
+        $io->section('2. Production Readiness Scan');
+        $io->text('Scanning environment, configuration, and codebase...');
+
+        $isDev = (bool) $input->getOption('dev');
+        $scanner = Container::getInstance()->get(ProductionScanner::class);
+        if (! $scanner->scan($io, $isDev)) {
+            $io->error('Production Readiness Scan failed! Please fix the reported issues.');
+
+            return Command::FAILURE;
+        }
+
+        $io->section('3. Integrity & Style Inspection');
         $io->text('Running Coding Style (Pint) and Comment Cleanup Check...');
 
         // Start Pint and Comment Check
@@ -73,7 +100,7 @@ class SailCommand extends Command
         }
         $io->success('Comment Cleanup Check Passed.');
 
-        $io->section('2. Operational Readiness & Testing');
+        $io->section('4. Operational Readiness & Testing');
         $pestCommand = PHP_BINARY . ' vendor/bin/pest --colors=always';
         if (! $this->runStep($io, $output, $pestCommand, 'Unit Tests')) {
             return Command::FAILURE;

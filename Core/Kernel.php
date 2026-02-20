@@ -14,17 +14,24 @@ declare(strict_types=1);
 
 namespace Core;
 
+use Core\Contracts\TerminableInterface;
 use Core\Error\ConfigurationException;
 use Core\Error\ErrorHandler;
 use Core\Ioc\ContainerInterface;
+use Core\Providers\EventServiceProvider;
+use Core\Route\UrlResolver;
 use Core\Services\ConfigServiceInterface;
+use Cron\Providers\CronServiceProvider;
+use Database\Connection;
 use Database\Providers\DatabaseServiceProvider;
 use Debugger\Debugger;
 use Debugger\Providers\DebuggerServiceProvider;
 use Defer\Providers\DeferServiceProvider;
+use Helpers\Benchmark;
 use Helpers\Encryption\EncryptionServiceProvider;
 use Helpers\Http\Request;
 use Helpers\Http\Response;
+use Helpers\String\Inflector;
 use Mail\Providers\MailServiceProvider;
 use Security\Firewall\Providers\FirewallServiceProvider;
 
@@ -41,6 +48,8 @@ class Kernel
         DebuggerServiceProvider::class,
         EncryptionServiceProvider::class,
         DeferServiceProvider::class,
+        CronServiceProvider::class,
+        EventServiceProvider::class,
     ];
 
     public function __construct(ContainerInterface $container, string $appBasePath)
@@ -71,6 +80,7 @@ class Kernel
             $manager = new ProviderManager($container);
             $config = $container->get(ConfigServiceInterface::class);
             $providers = array_merge($this->providers, $config->get('providers') ?? []);
+
             $manager->setProviders($providers);
 
             return $manager;
@@ -136,5 +146,39 @@ class Kernel
     public function getContainer(): ContainerInterface
     {
         return $this->container;
+    }
+
+    /**
+     * Terminate the application, clearing state in services.
+     */
+    public function terminate(): void
+    {
+        $provider = $this->container->get(ProviderManager::class);
+
+        foreach ($provider->getLoadedProviderInstances() as $instance) {
+            if ($instance instanceof TerminableInterface) {
+                $instance->terminate();
+            }
+        }
+
+        if (class_exists(Connection::class)) {
+            Connection::clearQueryLog();
+        }
+
+        if (class_exists(Benchmark::class)) {
+            Benchmark::reset();
+        }
+
+        if (class_exists(UrlResolver::class)) {
+            UrlResolver::reset();
+        }
+
+        if (class_exists(Event::class)) {
+            Event::reset();
+        }
+
+        if (class_exists(Inflector::class)) {
+            Inflector::reset();
+        }
     }
 }

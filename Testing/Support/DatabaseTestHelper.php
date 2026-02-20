@@ -10,6 +10,7 @@ use Core\Ioc\Container;
 use Database\BaseModel;
 use Database\Connection;
 use Database\ConnectionInterface;
+use Database\DB;
 use Database\Schema\Schema;
 use Error;
 use Exception;
@@ -24,7 +25,6 @@ class DatabaseTestHelper
 
     public static function setupInMemoryDatabase(): ConnectionInterface
     {
-        // If we already have a connection, clean it up before starting fresh
         if (self::$connection !== null) {
             self::resetDefaultConnection();
         }
@@ -35,14 +35,9 @@ class DatabaseTestHelper
 
             self::$connection = $connection;
 
-            // Sync other components with this connection
             Schema::setConnection($connection);
             BaseModel::setConnection($connection);
-
-            // Also update the DB facade's default connection if possible
-            if (class_exists('Database\\DB')) {
-                \Database\DB::setDefaultConnection($connection);
-            }
+            DB::setDefaultConnection($connection);
         } catch (Exception $e) {
             throw new RuntimeException("Failed to connect to in-memory database: " . $e->getMessage());
         }
@@ -53,10 +48,10 @@ class DatabaseTestHelper
     public static function resetDefaultConnection(): void
     {
         if (self::$connection) {
-            // Use the connection's own robust dropAllTables method
             self::$connection->dropAllTables();
             self::$connection->disconnect();
         }
+
         self::$connection = null;
     }
 
@@ -85,7 +80,9 @@ class DatabaseTestHelper
             return;
         }
 
-        $files = glob($migrationPath . DIRECTORY_SEPARATOR . '*.php');
+        $pattern = $migrationPath . DIRECTORY_SEPARATOR . '*.php';
+        $files = glob($pattern);
+
         if ($files === false) {
             return;
         }
@@ -154,16 +151,16 @@ class DatabaseTestHelper
 
     public static function setupTestEnvironment(array $packages = [], bool $includeAppMigrations = false): ConnectionInterface
     {
-        // Ensure Paths are initialized for the test environment
         self::initializePaths();
 
-        // Bind AuthMock for packages that require it
         $container = container();
+
         if ($container instanceof Container && !($container instanceof MockInterface) && !$container->has(AuthServiceInterface::class)) {
             $container->singleton(AuthServiceInterface::class, AuthMock::class);
         }
 
         $connection = self::setupInMemoryDatabase();
+
         Schema::setConnection($connection);
         BaseModel::setConnection($connection);
 
@@ -207,8 +204,6 @@ class DatabaseTestHelper
 
             $className = preg_replace('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '', $filename);
             $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $className)));
-
-            // Try namespaced, Migration suffix, and global
             $namespaced = 'Testing\\Fixtures\\Migrations\\' . $className;
             $namespacedMigration = $namespaced . 'Migration';
 

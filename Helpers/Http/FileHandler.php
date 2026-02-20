@@ -13,8 +13,11 @@ declare(strict_types=1);
 namespace Helpers\Http;
 
 use Exception;
+use Helpers\File\FileSizeHelper;
+use Helpers\File\FileSystem;
 use Helpers\File\FileUploadValidator;
 use Helpers\File\Mimes;
+use Helpers\File\Paths;
 use RuntimeException;
 
 class FileHandler
@@ -106,11 +109,14 @@ class FileHandler
 
         $file = $name . '.' . $extension;
 
-        if (! file_exists($target_path . '/')) {
-            mkdir($target_path, 0777, true);
+        // Resolve path via Paths helper
+        $target_path = Paths::basePath($target_path);
+
+        if (! FileSystem::exists($target_path)) {
+            FileSystem::mkdir($target_path);
         }
 
-        $destination = $target_path . '/' . $file;
+        $destination = $target_path . DIRECTORY_SEPARATOR . $file;
 
         try {
             return move_uploaded_file($this->getpathName(), $destination);
@@ -215,7 +221,7 @@ class FileHandler
 
     public function hasError(): bool
     {
-        return $this->getError() === null;
+        return $this->getError() !== UPLOAD_ERR_OK;
     }
 
     public function isValid(): bool
@@ -294,7 +300,7 @@ class FileHandler
         $maxSize = $options['maxSize'] ?? '5mb'; // Default to 5MB
 
         // Convert human-readable size to bytes (e.g., '2mb' -> 2097152)
-        $maxSize = \Helpers\File\FileSizeHelper::toBytes($maxSize);
+        $maxSize = FileSizeHelper::toBytes($maxSize);
 
         if ($type === 'image') {
             return FileUploadValidator::forImages($maxSize);

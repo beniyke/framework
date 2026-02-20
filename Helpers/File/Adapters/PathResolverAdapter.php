@@ -47,6 +47,11 @@ class PathResolverAdapter implements PathResolverInterface
         return Paths::corePath($value);
     }
 
+    public function logPath(?string $value = null): string
+    {
+        return Paths::logPath($value);
+    }
+
     public function cliPath(?string $value = null): string
     {
         return Paths::cliPath($value);

@@ -21,6 +21,7 @@ use Core\Providers\SystemAdapterProvider;
 use Core\Services\DotenvInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
 use Helpers\File\Paths;
+use Helpers\File\Storage\Providers\StorageServiceProvider;
 
 class Bootstrapper
 {
@@ -28,6 +29,7 @@ class Bootstrapper
         SystemAdapterProvider::class,
         CoreServiceProvider::class,
         HttpServiceProvider::class,
+        StorageServiceProvider::class,
     ];
 
     private readonly ContainerInterface $container;
@@ -95,7 +97,7 @@ class Bootstrapper
     private function loadApplicationHelpers(PathResolverInterface $paths): void
     {
         $basePath = $paths->corePath('Globals');
-        $specificFiles = ['env', 'debug', 'array', 'execution', 'files', 'format', 'http', 'misc', 'security', 'string', 'validation', 'view'];
+        $specificFiles = ['env', 'debug', 'array', 'execution', 'files', 'format', 'http', 'misc', 'paths', 'security', 'string', 'validation', 'view', 'auth'];
 
         if (is_dir($basePath)) {
             foreach ($specificFiles as $file) {

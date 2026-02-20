@@ -17,7 +17,7 @@ use Helpers\File\Paths;
 
 trait GenerateValidationTrait
 {
-    public function requestValidation(string $request_validation, string $validation_type, ?string $module = null): array
+    public function requestValidation(string $request_validation, string $validation_type, ?string $module = null, bool $withDto = true): array
     {
         $default_template_path = Paths::cliPath('Build/Templates/');
         $custom_template_path = Paths::storagePath('build/');
@@ -71,6 +71,10 @@ trait GenerateValidationTrait
             $generated = FileSystem::put($file, $newcontent);
 
             if ($generated) {
+                if ($withDto && method_exists($this, 'request')) {
+                    $this->request($request_validation, $module);
+                }
+
                 return [
                     'status' => true,
                     'message' => $request_validation_name . ' generated successfully.',

@@ -17,7 +17,7 @@ use Helpers\DateTimeHelper;
 
 class CounterStore
 {
-    private const TABLE_NAME = 'firewall_counter';
+    public const TABLE_NAME = 'firewall_counter';
 
     private ConnectionInterface $db;
 

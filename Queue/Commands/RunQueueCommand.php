@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Queue\Commands;
 
+use Defer\Defer;
 use Exception;
 use Queue\Interfaces\QueueDispatcherInterface;
 use Symfony\Component\Console\Command\Command;
@@ -65,7 +66,7 @@ class RunQueueCommand extends Command
             if ($status == 'all') {
                 $io->info('Scheduling failed job retry run for shutdown...');
 
-                defer(function () use ($dispatcher, $io, $identifier) {
+                Defer::push(function () use ($dispatcher, $io, $identifier) {
                     $io->info('Attempting to re-run failed jobs...');
                     try {
                         $failedResponse = $dispatcher->failed($identifier)->run();

@@ -22,7 +22,7 @@ class DevReadinessService
 {
     private const QUEUE_TABLE = 'queued_job';
 
-    public function runChecks(SymfonyStyle $io): bool
+    public function runChecks(SymfonyStyle $io, bool $skipQueueChecks = false): bool
     {
         $io->section('Checking Development Environment Readiness...');
 
@@ -31,6 +31,10 @@ class DevReadinessService
             'Queue Service Provider' => fn () => $this->checkQueueProviderRegistered(),
             'Queue Jobs Table' => fn () => $this->checkQueueTableExists()
         ];
+
+        if ($skipQueueChecks) {
+            unset($checks['Queue Service Provider'], $checks['Queue Jobs Table']);
+        }
 
         $failures = [];
 

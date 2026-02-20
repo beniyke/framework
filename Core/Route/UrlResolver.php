@@ -23,6 +23,7 @@ class UrlResolver
     private const CONFIG_DEFAULT = 'default';
     private const CONFIG_REDIRECT = 'redirect';
     private const CONFIG_SUBSTITUTE = 'substitute';
+    private const CONFIG_CONTEXT = 'context';
     private const RESULT_REDIRECT = 'redirect';
 
     private array $url = [];
@@ -38,6 +39,7 @@ class UrlResolver
     private static array $method_cache = [];
 
     private static array $module_cache = [];
+
     private const CONTROLLER_NAMESPACE = 'App\\{module}\\Controllers';
 
     public function __construct(Request $request, ConfigServiceInterface $config)
@@ -49,6 +51,7 @@ class UrlResolver
             self::CONFIG_DEFAULT => $config->get('route.' . self::CONFIG_DEFAULT),
             self::CONFIG_REDIRECT => $config->get('route.' . self::CONFIG_REDIRECT, []),
             self::CONFIG_SUBSTITUTE => $config->get('route.' . self::CONFIG_SUBSTITUTE, []),
+            self::CONFIG_CONTEXT => $config->get('route.' . self::CONFIG_CONTEXT, []),
         ];
 
         $uri = static::first(explode('?', ltrim($request->uri(), '/'))) ?? '';
@@ -189,6 +192,7 @@ class UrlResolver
             'method' => $method,
             'parameters' => $parameters,
             'middleware' => $this->getMiddlewareStack() ?? [],
+            'context' => $this->route_config[self::CONFIG_CONTEXT][implode('/', $this->url)] ?? [],
         ]);
     }
 
@@ -261,5 +265,12 @@ class UrlResolver
     private static function determineControllerNamespace(string $module): string
     {
         return str_replace('{module}', ucfirst($module), static::CONTROLLER_NAMESPACE);
+    }
+
+    public static function reset(): void
+    {
+        self::$controller_cache = [];
+        self::$method_cache = [];
+        self::$module_cache = [];
     }
 }

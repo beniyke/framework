@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Helpers\File;
 
 use Core\Services\ConfigServiceInterface;
+use Defer\Defer;
 use Exception;
 use Helpers\File\Contracts\CacheInterface;
 use RuntimeException;
@@ -173,7 +174,7 @@ final class Cache implements CacheInterface
 
             if (is_array($value) && isset($value['__payload_type']) && $value['__payload_type'] === 'tagged') {
                 foreach ($value['tags'] as $tag) {
-                    if ($this->getTagTimestamp($tag) > $value['created_at']) {
+                    if ($this->getTagTimestamp($tag) >= $value['created_at']) {
                         FileSystem::delete($filename);
                         $this->metrics['misses']++;
 
@@ -346,8 +347,8 @@ final class Cache implements CacheInterface
             if ($now < $data['hard_expire']) {
                 $staleValue = $data['value'];
 
-                if (function_exists('defer')) {
-                    defer(function () use ($key, $ttl, $callback) {
+                if (class_exists(Defer::class)) {
+                    Defer::push(function () use ($key, $ttl, $callback) {
                         if ($this->acquireLock($key, 30)) {
                             try {
                                 $fresh = $callback();

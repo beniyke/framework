@@ -1290,8 +1290,13 @@ class Builder
             $cacheKey = $this->getCacheKey();
             $cache = Cache::create('query')->withPath($this->table);
 
-            if (! empty($this->cacheTags)) {
-                $cache = $cache->tags($this->cacheTags);
+            $tags = $this->cacheTags;
+            if (empty($tags) && $this->table) {
+                $tags = [$this->table];
+            }
+
+            if (! empty($tags)) {
+                $cache = $cache->tags($tags);
             }
 
             $callback = fn () => $this->executeQuery();

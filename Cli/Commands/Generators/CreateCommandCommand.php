@@ -25,9 +25,10 @@ class CreateCommandCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('commandname', InputArgument::REQUIRED, 'Name of the command class to generate')
+            ->addArgument('module', InputArgument::OPTIONAL, 'The module name if creating in App/src/{Module}')
             ->setName('command:create')
             ->setDescription('Creates new command class.')
-            ->setHelp('This command allows you to create a new custom command class file.');
+            ->setHelp('This command allows you to create a new custom command class file in App/Commands or App/src/{Module}/Commands.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -35,16 +36,21 @@ class CreateCommandCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $commandName = $input->getArgument('commandname');
+        $module = $input->getArgument('module');
 
         $io->title('Custom Command Generator');
-        $io->note(sprintf('Attempting to create command class: "%s".', $commandName));
+        $io->note(sprintf(
+            'Attempting to create command class: "%s"%s.',
+            $commandName,
+            $module ? " in module \"{$module}\"" : " in App"
+        ));
 
         try {
             $generator = Generators::getInstance();
 
             $io->text('Generating command file...');
 
-            $build = $generator->command($commandName);
+            $build = $generator->command($commandName, $module);
 
             if ($build['status']) {
                 $io->success($build['message']);

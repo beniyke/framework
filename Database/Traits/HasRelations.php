@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Database\Traits;
 
+use Closure;
+use Database\BaseModel;
 use Database\Query\Builder;
 use Database\Relations\BaseRelation;
 use Database\Relations\BelongsTo;
@@ -50,7 +52,7 @@ trait HasRelations
         return (string) preg_replace('/s$/', '', $tableName);
     }
 
-    protected function belongsTo(string $relatedModel, ?string $foreignKey = null, ?string $ownerKey = null): BelongsTo
+    public function belongsTo(string $relatedModel, ?string $foreignKey = null, ?string $ownerKey = null): BelongsTo
     {
         $instance = new $relatedModel();
 
@@ -63,7 +65,7 @@ trait HasRelations
         return new BelongsTo($this, $relatedModel, $foreignKey, $ownerKey);
     }
 
-    protected function hasMany(string $relatedModel, ?string $foreignKey = null, ?string $localKey = null): HasMany
+    public function hasMany(string $relatedModel, ?string $foreignKey = null, ?string $localKey = null): HasMany
     {
         if (is_null($foreignKey)) {
             $foreignKey = $this->getClassNameSnakeCase(static::class) . '_id';
@@ -74,7 +76,7 @@ trait HasRelations
         return new HasMany($this, $relatedModel, $foreignKey, $localKey);
     }
 
-    protected function hasOne(string $relatedModel, ?string $foreignKey = null, ?string $localKey = null): HasOne
+    public function hasOne(string $relatedModel, ?string $foreignKey = null, ?string $localKey = null): HasOne
     {
         if (is_null($foreignKey)) {
             $foreignKey = $this->getClassNameSnakeCase(static::class) . '_id';
@@ -85,7 +87,7 @@ trait HasRelations
         return new HasOne($this, $relatedModel, $foreignKey, $localKey);
     }
 
-    protected function belongsToMany(string $relatedModel, ?string $pivotTable = null, ?string $foreignPivotKey = null, ?string $relatedPivotKey = null, ?string $parentKey = null, ?string $relatedKey = null): BelongsToMany
+    public function belongsToMany(string $relatedModel, ?string $pivotTable = null, ?string $foreignPivotKey = null, ?string $relatedPivotKey = null, ?string $parentKey = null, ?string $relatedKey = null): BelongsToMany
     {
         $relatedInstance = new $relatedModel();
         $parentTable = $this->getTable();
@@ -109,7 +111,7 @@ trait HasRelations
         return new BelongsToMany($this, $relatedModel, $pivotTable, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey);
     }
 
-    protected function hasManyThrough(string $relatedModel, string $throughModel, ?string $firstKey = null, ?string $secondKey = null, ?string $throughLocalKey = null, ?string $relatedLocalKey = null): HasManyThrough
+    public function hasManyThrough(string $relatedModel, string $throughModel, ?string $firstKey = null, ?string $secondKey = null, ?string $throughLocalKey = null, ?string $relatedLocalKey = null): HasManyThrough
     {
         $throughInstance = new $throughModel();
 
@@ -127,7 +129,7 @@ trait HasRelations
         return new HasManyThrough($this, $relatedModel, $throughModel, $firstKey, $secondKey, $throughLocalKey, $relatedLocalKey);
     }
 
-    protected function morphTo(?string $name = null, ?string $type = null, ?string $id = null): MorphTo
+    public function morphTo(?string $name = null, ?string $type = null, ?string $id = null): MorphTo
     {
         if (is_null($name)) {
             $name = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
@@ -144,7 +146,7 @@ trait HasRelations
         return new MorphTo($this, $type, $id);
     }
 
-    protected function morphOne(string $relatedModel, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphOne
+    public function morphOne(string $relatedModel, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphOne
     {
         if (is_null($type)) {
             $type = $name . '_type';
@@ -159,7 +161,7 @@ trait HasRelations
         return new MorphOne($this, $relatedModel, $id, $localKey, $type, static::class);
     }
 
-    protected function morphMany(string $relatedModel, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphMany
+    public function morphMany(string $relatedModel, string $name, ?string $type = null, ?string $id = null, ?string $localKey = null): MorphMany
     {
         if (is_null($type)) {
             $type = $name . '_type';
@@ -181,6 +183,17 @@ trait HasRelations
 
             if ($relation instanceof BaseRelation) {
                 return $relation;
+            }
+        }
+
+        // Check for macros if method doesn't exist or isn't a relation
+        if (isset(BaseModel::$macros[static::class][$name])) {
+            $macro = BaseModel::$macros[static::class][$name];
+            if ($macro instanceof Closure) {
+                $relation = $macro->bindTo($this, static::class)();
+                if ($relation instanceof BaseRelation) {
+                    return $relation;
+                }
             }
         }
 

@@ -50,6 +50,11 @@ class Schema
         }
     }
 
+    public static function createIfNotExists(string $table, callable $callback): void
+    {
+        static::createIfNotExist($table, $callback);
+    }
+
     public static function table(string $table, callable $callback): void
     {
         $builder = new SchemaBuilder(static::getConnection(), $table, 'alter');

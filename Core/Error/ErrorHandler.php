@@ -56,7 +56,7 @@ class ErrorHandler
         ini_set('display_errors', $debug ? 1 : 0);
         ini_set('log_errors', 1);
 
-        ini_set('error_log', $this->paths->basePath('error.log'));
+        ini_set('error_log', $this->paths->logPath('error.log'));
     }
 
     public function register(): void

@@ -20,6 +20,7 @@ use Helpers\File\Paths;
 use LogicException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
@@ -36,7 +37,8 @@ class DevSetupCommand extends Command
     {
         $this->setName('dev')
             ->setDescription('Starts the PHP built-in server and worker processes in the background, and restarts them on .env file changes.')
-            ->setHelp('This command starts the PHP server on ' . env('APP_HOST') . ' and runs a worker process, both in the background and restarts them on .env file changes. It is intended for use in the development environment only.');
+            ->addOption('server-only', 's', InputOption::VALUE_NONE, 'Run the server and watcher without the worker process')
+            ->setHelp('This command starts the PHP server on ' . config('host', 'localhost/anchor') . ' and runs a worker process, both in the background and restarts them on .env file changes. It is intended for use in the development environment only.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -61,13 +63,15 @@ class DevSetupCommand extends Command
             $last_modified = FileSystem::lastModified($env_file);
 
             // Execute Readiness Checks
+            $serverOnly = $input->getOption('server-only');
             $readinessService = new DevReadinessService();
-            if (! $readinessService->runChecks($io)) {
+
+            if (! $readinessService->runChecks($io, skipQueueChecks: $serverOnly)) {
                 return self::FAILURE;
             }
 
             $this->flushCache($io);
-            $this->startProcesses($io);
+            $this->startProcesses($io, $serverOnly);
 
             $io->section('File Watcher Started');
             $io->note('Monitoring ' . basename($env_file) . ' for changes (stable loop)...');
@@ -107,7 +111,7 @@ class DevSetupCommand extends Command
 
                     $this->stopProcesses($io);
                     $this->flushCache($io);
-                    $this->startProcesses($io);
+                    $this->startProcesses($io, $serverOnly);
                     $io->text('Monitoring resumed...');
                 }
 
@@ -127,18 +131,21 @@ class DevSetupCommand extends Command
         }
     }
 
-    private function startProcesses(SymfonyStyle $io): void
+    private function startProcesses(SymfonyStyle $io, bool $serverOnly = false): void
     {
         $io->section('Starting Processes');
 
         $this->startServer($io);
-        $this->startWorker($io);
+
+        if (! $serverOnly) {
+            $this->startWorker($io);
+        }
     }
 
     private function startServer(SymfonyStyle $io): void
     {
         $cwd = Paths::basePath();
-        $appHost = env('APP_HOST');
+        $appHost = config('host', 'localhost/anchor');
 
         $this->server_process = new Process(['php', '-S', $appHost, 'server.php'], $cwd);
         $this->server_process->start();
@@ -154,7 +161,6 @@ class DevSetupCommand extends Command
     {
         $cwd = Paths::basePath();
 
-        // Correctly start the worker with the 'start' command
         $this->worker_process = new Process(['php', 'worker', 'start'], $cwd);
         $this->worker_process->start();
 
@@ -168,7 +174,7 @@ class DevSetupCommand extends Command
     private function stopProcesses(SymfonyStyle $io): void
     {
         $io->text('Stopping active processes...');
-        $timeout = 10; // Increased timeout for graceful worker shutdown
+        $timeout = 10;
 
         if ($this->server_process && $this->server_process->isRunning()) {
             $this->server_process->stop($timeout);

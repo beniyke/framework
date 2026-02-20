@@ -144,8 +144,8 @@ class {validationName} extends BaseRequestValidation
         return $requestData;
     }
 
-    public function getRequest(): {request-name}Request
+    public function getRequest(): {requestName}Request
     {
-        return new {request-name}Request($this->validated()->data());
+        return new {requestName}Request($this->validated()->data());
     }
 }

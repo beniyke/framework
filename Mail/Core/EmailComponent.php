@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Mail\Core;
 
+use Parsedown\Parsedown;
+
 class EmailComponent
 {
     private string $build = '';
@@ -81,6 +83,21 @@ class EmailComponent
     public function line(string $value): self
     {
         $this->build .= '<p style="font-family: sans-serif; font-size: 16px; line-height: 1.6; color: #374151; margin-bottom: 15px;">' . $this->escape($value) . '</p>';
+
+        return $this;
+    }
+
+    public function markdown(string $value): self
+    {
+        $parser = new Parsedown();
+
+        if ($this->escape) {
+            $parser->setSafeMode(true);
+            $parser->setMarkupEscaped(true);
+        }
+
+        $v = $parser->line($value);
+        $this->build .= '<p style="font-family: sans-serif; font-size: 16px; line-height: 1.6; color: #374151; margin-bottom: 15px;">' . $v . '</p>';
 
         return $this;
     }

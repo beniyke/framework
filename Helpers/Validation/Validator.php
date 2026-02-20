@@ -15,7 +15,7 @@ namespace Helpers\Validation;
 use Exception;
 use Helpers\Array\ArrayCollection;
 use Helpers\Array\Collections;
-use Helpers\Data;
+use Helpers\Data\Data;
 use Helpers\Validation\Email\EmailValidator;
 
 class Validator

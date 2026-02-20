@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Core\Ioc;
 
+use Closure;
+
 interface ContainerInterface
 {
     /**
@@ -115,4 +117,12 @@ interface ContainerInterface
      * @param array  $provides      The services provided by the provider.
      */
     public function registerDeferredProvider(string $providerClass, array $provides): void;
+
+    /**
+     * Extends a service in the container.
+     *
+     * @param string  $abstract
+     * @param Closure $closure
+     */
+    public function extend(string $abstract, Closure $closure): void;
 }

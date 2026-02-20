@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Notify\Contracts;
 
-use Helpers\Data;
+use Helpers\Data\Data;
 
 interface MessageNotifiable extends Notifiable
 {

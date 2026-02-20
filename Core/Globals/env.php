@@ -21,9 +21,11 @@ if (! function_exists('container')) {
 }
 
 if (! function_exists('resolve')) {
-    function resolve(string $namespace): object
+    function resolve(string $namespace, array $parameters = []): object
     {
-        return container()->get($namespace);
+        return empty($parameters)
+            ? container()->get($namespace)
+            : container()->make($namespace, $parameters);
     }
 }
 

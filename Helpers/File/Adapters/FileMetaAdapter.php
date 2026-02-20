@@ -47,9 +47,29 @@ class FileMetaAdapter implements FileMetaInterface
         return FileSystem::size($path);
     }
 
+    public function directorySize(string $path): int
+    {
+        return FileSystem::directorySize($path);
+    }
+
     public function chmod(string $path, int $permission): bool
     {
         return FileSystem::chmod($path, $permission);
+    }
+
+    public function lastModified(string $path): int
+    {
+        return FileSystem::lastModified($path);
+    }
+
+    public function mimeType(string $path): string
+    {
+        return mime_content_type($path) ?: 'application/octet-stream';
+    }
+
+    public function extension(string $path): string
+    {
+        return FileSystem::extension($path);
     }
 
     public function permissions(string $path): string
