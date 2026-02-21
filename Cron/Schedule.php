@@ -154,7 +154,7 @@ class Schedule implements CronInterface
             if (function_exists('dock')) {
                 try {
                     $response = dock($signature)->run();
-                    echo $response . PHP_EOL;
+                    echo $response->getOutput() . PHP_EOL;
                 } catch (Throwable $e) {
                     error_log("Scheduled command '{$signature}' failed: " . $e->getMessage());
                 }

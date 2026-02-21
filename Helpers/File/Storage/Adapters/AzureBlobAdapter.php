@@ -112,6 +112,7 @@ class AzureBlobAdapter extends StorageAdapter
 
     protected function getBlobProperties(string $path): array
     {
+        /** @var array<string> $responseHeaders */
         $responseHeaders = [];
         try {
             $this->request('HEAD', $path, '', [], ['response_headers' => &$responseHeaders]);
@@ -405,7 +406,7 @@ class AzureBlobAdapter extends StorageAdapter
             $canonicalizedHeaders .= "$k:$v\n";
         }
 
-        $cl = $headers['Content-Length'] ?? '';
+        $cl = (string) $headers['Content-Length'];
 
         $stringToSign = "$method\n\n\n$cl\n\n$contentType\n\n\n\n\n\n\n" .
             $canonicalizedHeaders .
@@ -430,9 +431,7 @@ class AzureBlobAdapter extends StorageAdapter
         if (is_resource($payload)) {
             curl_setopt($ch, CURLOPT_UPLOAD, true);
             curl_setopt($ch, CURLOPT_INFILE, $payload);
-            if (isset($headers['Content-Length'])) {
-                curl_setopt($ch, CURLOPT_INFILESIZE, (int)$headers['Content-Length']);
-            }
+            curl_setopt($ch, CURLOPT_INFILESIZE, (int)$headers['Content-Length']);
         } else {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }

@@ -59,7 +59,8 @@ class CoreServiceProvider extends ServiceProvider
                 $container->get(FileMetaInterface::class),
                 $container->get(FileReadWriteInterface::class),
                 $container->get(SapiInterface::class),
-                $container
+                $container,
+                $container->get(ConfigServiceInterface::class)
             );
         });
 

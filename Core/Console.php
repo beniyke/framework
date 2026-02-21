@@ -15,6 +15,7 @@ namespace Core;
 
 use Core\Events\ConsoleTerminateEvent;
 use Core\Ioc\ContainerInterface;
+use Core\Services\ConfigServiceInterface;
 use Core\Support\Adapters\Interfaces\SapiInterface;
 use Helpers\File\Adapters\Interfaces\FileMetaInterface;
 use Helpers\File\Adapters\Interfaces\FileReadWriteInterface;
@@ -43,6 +44,8 @@ class Console
 
     private readonly ContainerInterface $container;
 
+    private readonly ConfigServiceInterface $config;
+
     private array $excluded = ['AbstractCommand'];
 
     public function __construct(
@@ -50,13 +53,15 @@ class Console
         FileMetaInterface $fileMeta,
         FileReadWriteInterface $fileReadWrite,
         SapiInterface $sapi,
-        ContainerInterface $container
+        ContainerInterface $container,
+        ConfigServiceInterface $config
     ) {
         $this->paths = $paths;
         $this->fileMeta = $fileMeta;
         $this->fileReadWrite = $fileReadWrite;
         $this->sapi = $sapi;
         $this->container = $container;
+        $this->config = $config;
 
         $this->ensureCliEnvironment();
     }
@@ -158,9 +163,15 @@ class Console
             $packages = $this->discoverSubdirectories($packagesPath);
 
             foreach ($packages as $package) {
-                $packageCommandsPath = $packagesPath . DIRECTORY_SEPARATOR . $package . DIRECTORY_SEPARATOR . 'Commands';
+                $packagePath = $packagesPath . DIRECTORY_SEPARATOR . $package;
+                $packageCommandsPath = $packagePath . DIRECTORY_SEPARATOR . 'Commands';
 
                 if ($this->fileMeta->isDir($packageCommandsPath)) {
+                    // Filter commands if the package is not registered
+                    if (! $this->isPackageActive($packagePath)) {
+                        continue;
+                    }
+
                     foreach ($this->discoverClassNames($packageCommandsPath) as $class) {
                         $fqcn = $this->qualify("{$package}\\Commands\\{$class}");
                         if ($this->isValidCommand($fqcn)) {
@@ -227,5 +238,34 @@ class Console
     private function qualify(string $fqcn): string
     {
         return str_replace('/', '\\', $fqcn);
+    }
+
+    private function isPackageActive(string $packagePath): bool
+    {
+        $setupFile = $packagePath . DIRECTORY_SEPARATOR . 'setup.php';
+
+        if (! $this->fileMeta->isFile($setupFile)) {
+            return true; // No setup file, assume active or it's just a dir
+        }
+
+        try {
+            $manifest = require $setupFile;
+
+            if (! is_array($manifest) || ! isset($manifest['providers']) || empty($manifest['providers'])) {
+                return true;
+            }
+
+            $registeredProviders = $this->config->get('providers', []);
+
+            foreach ($manifest['providers'] as $provider) {
+                if (in_array($provider, $registeredProviders, true)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Throwable) {
+            return true; // Safety fallback
+        }
     }
 }

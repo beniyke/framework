@@ -386,9 +386,10 @@ class S3Adapter extends StorageAdapter
     protected function head(string $path): array
     {
         $responseHeaders = [];
-        $this->request('HEAD', $path, '', [], $responseHeaders);
+        $this->request('HEAD', $path, '', [], ['response_headers' => &$responseHeaders]);
 
         $headers = [];
+        /** @var array<string> $responseHeaders */
         foreach ($responseHeaders as $line) {
             $parts = explode(':', $line, 2);
             if (count($parts) === 2) {
