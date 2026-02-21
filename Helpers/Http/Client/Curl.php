@@ -60,6 +60,11 @@ class Curl
         $this->headers = new Header($finalHeaders);
     }
 
+    public function __clone()
+    {
+        $this->headers = clone $this->headers;
+    }
+
     public function withQueryParameters(array $params): self
     {
         $this->queryParams = array_merge($this->queryParams, $params);
@@ -249,28 +254,12 @@ class Curl
                 return false;
             }
 
-            curl_setopt($ch, CURLOPT_URL, $this->_buildUrlWithQuery());
             curl_setopt($ch, CURLOPT_FILE, $fp);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT_MS, $this->timeout);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->verifySsl);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->verifySsl ? 2 : 0);
-            curl_setopt($ch, CURLOPT_FAILONERROR, false);
 
-            // Add auth if configured
-            if ($this->authType === 'token' && $this->authToken) {
-                $this->headers = $this->headers->set('Authorization', $this->authToken);
-            } elseif ($this->authType === 'basic' || $this->authType === 'digest') {
-                curl_setopt($ch, CURLOPT_USERPWD, "{$this->authUsername}:{$this->authPassword}");
-                if ($this->authType === 'basic') {
-                    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                } elseif ($this->authType === 'digest') {
-                    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
-                }
-            }
+            $this->requestUrl = $url;
+            $this->requestMethod = 'get';
 
-            $preparedHeaders = self::_prepareHeaders($this->headers->all());
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $preparedHeaders);
+            self::_applyCommonOptions($ch, $this);
 
             $result = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -490,9 +479,15 @@ class Curl
         $body = substr($result, $headerSize);
         $parsedHeaders = $this->_parseResponseHeaders($header);
 
+        $message = 'Success';
+        if (isset($parsedHeaders['Status-Line'])) {
+            $parts = explode(' ', $parsedHeaders['Status-Line'], 3);
+            $message = $parts[2] ?? 'Success';
+        }
+
         return [
             'status' => true,
-            'message' => 'Success',
+            'message' => $message,
             'http_code' => $httpCode,
             'body' => $body,
             'headers' => $parsedHeaders,
@@ -526,26 +521,10 @@ class Curl
     {
         $method = strtolower($instance->requestMethod);
 
-        curl_setopt($ch, CURLOPT_URL, $instance->requestUrl);
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, $instance->timeout);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $instance->verifySsl);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $instance->verifySsl ? 2 : 0);
 
-        if ($instance->authType === 'token' && $instance->authToken) {
-            $instance->headers = $instance->headers->set('Authorization', $instance->authToken);
-        } elseif ($instance->authType === 'basic' || $instance->authType === 'digest') {
-            curl_setopt($ch, CURLOPT_USERPWD, "{$instance->authUsername}:{$instance->authPassword}");
-            if ($instance->authType === 'basic') {
-                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-            } elseif ($instance->authType === 'digest') {
-                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
-            }
-        }
-
-        $preparedHeaders = self::_prepareHeaders($instance->headers->all());
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $preparedHeaders);
+        self::_applyCommonOptions($ch, $instance);
 
         if ($method !== 'get') {
             if ($method === 'post') {
@@ -559,6 +538,35 @@ class Curl
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
             }
         }
+    }
+
+    private static function _applyCommonOptions(CurlHandle $ch, self $instance): void
+    {
+        curl_setopt($ch, CURLOPT_URL, $instance->_buildUrlWithQuery());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, $instance->timeout);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $instance->verifySsl);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $instance->verifySsl ? 2 : 0);
+        curl_setopt($ch, CURLOPT_FAILONERROR, false);
+
+        if ($userAgent = $instance->headers->get('User-Agent')) {
+            curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+        }
+
+        if ($instance->authType === 'token' && $instance->authToken) {
+            $instance->headers = $instance->headers->set('Authorization', $instance->authToken);
+        } elseif ($instance->authType === 'basic' || $instance->authType === 'digest') {
+            curl_setopt($ch, CURLOPT_USERPWD, "{$instance->authUsername}:{$instance->authPassword}");
+            if ($instance->authType === 'basic') {
+                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            } elseif ($instance->authType === 'digest') {
+                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+            }
+        }
+
+        $preparedHeaders = self::_prepareHeaders($instance->headers->all(), $instance->requestMethod);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $preparedHeaders);
     }
 
     private static function _runMultiExecutor(CurlMultiHandle $multiHandle, array $handlesMap): array
@@ -606,9 +614,15 @@ class Curl
         $parser = new self();
         $parsedHeaders = $parser->_parseResponseHeaders($header);
 
+        $message = 'Success';
+        if (isset($parsedHeaders['Status-Line'])) {
+            $parts = explode(' ', $parsedHeaders['Status-Line'], 3);
+            $message = $parts[2] ?? 'Success';
+        }
+
         return [
             'status' => true,
-            'message' => 'Success',
+            'message' => $message,
             'http_code' => $httpCode,
             'body' => $body,
             'headers' => $parsedHeaders,
@@ -661,11 +675,25 @@ class Curl
         ];
     }
 
-    private static function _prepareHeaders(array $data): array
+    private static function _prepareHeaders(array $data, string $method): array
     {
         $headers = [];
+        $method = strtolower($method);
+
         foreach ($data as $key => $value) {
-            if (strtolower($key) === 'content-type' && str_contains(strtolower((string) $value), 'multipart/form-data')) {
+            $lowerKey = strtolower((string) $key);
+
+            // Skip Content-Type for GET requests if it's the default form-urlencoded
+            if ($method === 'get' && $lowerKey === 'content-type' && (string) $value === 'application/x-www-form-urlencoded') {
+                continue;
+            }
+
+            // Skip User-Agent as it will be set via CURLOPT_USERAGENT
+            if ($lowerKey === 'user-agent') {
+                continue;
+            }
+
+            if ($lowerKey === 'content-type' && str_contains(strtolower((string) $value), 'multipart/form-data')) {
                 continue;
             }
             $headers[] = $key . ': ' . $value;

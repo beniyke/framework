@@ -207,7 +207,10 @@ class Response
 
     public function getErrorMessage(): string
     {
-        return $this->message();
+        $code = $this->httpCode();
+        $message = $this->message();
+
+        return $code > 0 ? "{$code}: {$message}" : $message;
     }
 
     public function getBodyJson(string $key, mixed $default = null): mixed

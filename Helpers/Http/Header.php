@@ -36,6 +36,11 @@ class Header
         }
     }
 
+    public function __clone()
+    {
+        // Arrays are copied by value, so this is fine as long as there are no objects in $this->header
+    }
+
     public function set($key, $value = null): self
     {
         $this->header[$this->formatHeader($key)] = is_string($value) ? trim($value) : $value;
@@ -60,7 +65,8 @@ class Header
 
     public function remove(string $key): void
     {
-        if ($this->has($key)) {
+        $key = $this->formatHeader($key);
+        if (isset($this->header[$key])) {
             unset($this->header[$key]);
         }
     }

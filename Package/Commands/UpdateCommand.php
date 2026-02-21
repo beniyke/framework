@@ -50,7 +50,8 @@ class UpdateCommand extends Command
             ->setAliases(['framework:update'])
             ->setDescription('Intelligently updates the framework core based on the installation mode.')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Force update and overwrite files (Standalone mode only)')
-            ->addOption('tag', 't', InputOption::VALUE_OPTIONAL, 'Specific version tag to pull (Standalone mode only)');
+            ->addOption('tag', 't', InputOption::VALUE_OPTIONAL, 'Specific version tag to pull (Standalone mode only)')
+            ->addOption('ignore-ssl', 'k', InputOption::VALUE_NONE, 'Ignore SSL certificate verification failures');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -139,8 +140,16 @@ class UpdateCommand extends Command
     private function handleStandaloneUpdate(SymfonyStyle $io, InputInterface $input): int
     {
         try {
+            if ($input->getOption('ignore-ssl')) {
+                $this->hydrationService->getHttpClient()->withoutSslVerification();
+            }
             $io->text('Checking latest release on GitHub...');
             $release = $this->hydrationService->getLatestRelease();
+
+            if ($release['is_fallback'] ?? false) {
+                $io->note("No official releases found. Falling back to latest tag.");
+            }
+
             $tagName = $input->getOption('tag') ?? $release['tag_name'];
             $zipUrl = $release['zipball_url'];
 

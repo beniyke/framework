@@ -15,16 +15,21 @@ use ZipArchive;
 class HydrationService
 {
     private const GITHUB_API_URL = "https://api.github.com/repos/beniyke/anchor/releases/latest";
-    private const USER_AGENT = "Anchor-Framework-Hydrator";
+    private const GITHUB_TAGS_URL = "https://api.github.com/repos/beniyke/anchor/tags";
+    private const USER_AGENT = "Anchor-Framework-Hydrator/1.0 (https://github.com/beniyke/anchor)";
 
     private Curl $http;
 
     public function __construct(?Curl $http = null)
     {
-        $this->http = $http ?? new Curl([
-            'User-Agent' => self::USER_AGENT,
-            'Accept' => 'application/vnd.github.v3+json'
-        ]);
+        $this->http = $http ?? new Curl();
+        $this->http->withHeader('User-Agent', self::USER_AGENT)
+            ->withHeader('Accept', 'application/vnd.github.v3+json');
+    }
+
+    public function getHttpClient(): Curl
+    {
+        return $this->http;
     }
 
     public function getLatestRelease(): array
@@ -32,6 +37,10 @@ class HydrationService
         $response = $this->http->get(self::GITHUB_API_URL)->send();
 
         if (!$response->isSuccessful()) {
+            if ($response->httpCode() === 404) {
+                return $this->getLatestTag();
+            }
+
             throw new RuntimeException("Failed to fetch release info from GitHub: " . $response->getErrorMessage());
         }
 
@@ -39,32 +48,41 @@ class HydrationService
     }
 
     /**
+     * Fetch the latest tag from GitHub as a fallback when no releases exist.
+     */
+    public function getLatestTag(): array
+    {
+        $response = $this->http->get(self::GITHUB_TAGS_URL)->send();
+
+        if (!$response->isSuccessful()) {
+            throw new RuntimeException("Failed to fetch tags from GitHub: " . $response->getErrorMessage());
+        }
+
+        $tags = $response->json();
+
+        if (empty($tags) || !is_array($tags)) {
+            throw new RuntimeException("No releases or tags found for the framework on GitHub.");
+        }
+
+        $latestTag = $tags[0];
+
+        return [
+            'tag_name' => $latestTag['name'],
+            'zipball_url' => $latestTag['zipball_url'],
+            'is_fallback' => true
+        ];
+    }
+
+    /**
      * Download the framework ZIP to a temporary location.
      */
     public function downloadZip(string $url, string $savePath): bool
     {
-        // GitHub ZIP redirects might require follow-location if not handled by Curl wrapper
-        // Our Curl wrapper doesn't explicitly mention follow-location, but let's assume it works or use native curl if needed.
-        // Actually, let's use a simpler approach for the large download if Curl wrapper is tuned for small APIs.
+        // Increase timeout for large downloads
+        $this->http->timeout(300000); // 5 minutes
 
-        $fp = fopen($savePath, 'w+');
-        if (!$fp) {
-            throw new RuntimeException("Could not open path for writing zip: {$savePath}");
-        }
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_FILE, $fp);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 300); // 5 minutes
-
-        $success = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
-        fclose($fp);
-
-        if (!$success) {
-            throw new RuntimeException("Failed to download ZIP: {$error}");
+        if (!$this->http->download($url, $savePath)) {
+            throw new RuntimeException("Failed to download ZIP to: {$savePath}");
         }
 
         return true;
@@ -120,7 +138,7 @@ class HydrationService
                     FileSystem::mkdir($target);
                 } else {
                     FileSystem::mkdir(dirname($target));
-                    if (copy("zip://{$zipPath}#{$name}", $target)) {
+                    if (FileSystem::copy("zip://{$zipPath}#{$name}", $target)) {
                         $extractedCount++;
                     } else {
                         $errors[] = "Failed to extract: {$relativePath}";
