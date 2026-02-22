@@ -13,9 +13,9 @@ class {{ class }} extends BaseMigration
      */
     public function up(): void
     {
-        Schema::create('{{ table }}', function (SchemaBuilder $table) {
+        Schema::createIfNotExists('{{ table }}', function (SchemaBuilder $table) {
             $table->id();
-            $table->timestamps();
+            $table->dateTimestamps();
         });
     }
 

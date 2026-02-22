@@ -373,4 +373,20 @@ class FileSystem
 
         return str_starts_with($realPath, $realBase);
     }
+
+    /**
+     * List files and directories within a given path, excluding '.' and '..'.
+     *
+     * @return string[]
+     */
+    public static function scandir(string $path): array
+    {
+        if (! is_dir($path)) {
+            return [];
+        }
+
+        $entries = scandir($path);
+
+        return $entries !== false ? array_values(array_diff($entries, ['.', '..'])) : [];
+    }
 }

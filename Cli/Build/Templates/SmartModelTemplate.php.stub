@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {namespace}\Models;
+
+use Database\BaseModel;
+use Database\Query\Builder;
+{traitImports}{relationImports}
+/**
+{properties} */
+class {modelname} extends BaseModel
+{
+{traits}    protected string $table = '{inferredTableName}';
+
+    protected array $fillable = [
+{fillable}    ];
+
+{hidden}{casts}{softDeletesProperty}{relationships}{scopes}}
