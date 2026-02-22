@@ -28,7 +28,7 @@ use Helpers\String\Inflector;
 
 class App
 {
-    public const VERSION = '2.3.0';
+    public const VERSION = '2.3.1';
 
     private ContainerInterface $container;
 

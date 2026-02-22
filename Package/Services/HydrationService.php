@@ -148,13 +148,13 @@ class HydrationService
                     if ($stream !== false) {
                         $content = stream_get_contents($stream);
                         fclose($stream);
-                        if (FileSystem::put($target, $content)) {
+                        if ($this->safeWrite($target, $content)) {
                             $extractedCount++;
                         } else {
                             $errors[] = "Failed to write: {$relativePath}";
                         }
                     } else {
-                        $errors[] = "Failed to extract (stream): {$relativePath}";
+                        $errors[] = "Failed to extract: {$relativePath}";
                     }
                 }
             }
@@ -166,6 +166,35 @@ class HydrationService
             'count' => $extractedCount,
             'errors' => $errors
         ];
+    }
+
+    /**
+     * Write file content safely with atomic replace and retry logic.
+     *
+     * Handles transient file locks (common on Windows) by:
+     * 1. Attempting an atomic replace (write to temp file, then rename over target).
+     * 2. Falling back to a direct write.
+     * 3. Retrying up to $retries times with a short delay between attempts.
+     */
+    private function safeWrite(string $path, string $content, int $retries = 3): bool
+    {
+        for ($attempt = 1; $attempt <= $retries; $attempt++) {
+            // Atomic replace: write to temp file then rename over the target
+            if (FileSystem::replace($path, $content)) {
+                return true;
+            }
+
+            // Direct write fallback
+            if (FileSystem::put($path, $content)) {
+                return true;
+            }
+
+            if ($attempt < $retries) {
+                usleep(100_000); // 100ms delay before retry
+            }
+        }
+
+        return false;
     }
 
     /**
