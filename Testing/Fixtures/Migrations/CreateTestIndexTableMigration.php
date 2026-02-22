@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Database migration for create_test_index_table_migration.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Testing\Fixtures\Migrations;
 
 use Database\Migration\BaseMigration;

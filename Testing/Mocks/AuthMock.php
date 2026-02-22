@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Class AuthMock implementation.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Testing\Mocks;
 
 use App\Services\Auth\Interfaces\AuthServiceInterface;

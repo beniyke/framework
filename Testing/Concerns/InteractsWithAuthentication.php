@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Set the currently authenticated user for the application.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Testing\Concerns;
 
 use Database\BaseModel;
@@ -10,9 +18,6 @@ use PHPUnit\Framework\Assert;
 
 trait InteractsWithAuthentication
 {
-    /**
-     * Set the currently authenticated user for the application.
-     */
     protected function actingAs(BaseModel $user, ?string $connection = null): self
     {
         $this->setSession('user_id', $user->id);

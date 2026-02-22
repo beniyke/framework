@@ -1,4 +1,15 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * Anchor Framework
+ *
+ * Framework component: checkbox.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 $attributes = $checkbox['attributes'] ?? [];
 $attributes['type'] = 'checkbox';
 $old_value = $checkbox['value'] ?? null;

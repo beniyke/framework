@@ -2,13 +2,18 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Determine if a file exists.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Helpers\File\Storage;
 
 interface StorageInterface
 {
-    /**
-     * Determine if a file exists.
-     */
     public function exists(string $path): bool;
 
     /**

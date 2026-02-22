@@ -2,15 +2,20 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * The dynamic configuration for the adapter.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Helpers\File\Storage;
 
 use Exception;
 
 abstract class StorageAdapter implements StorageInterface
 {
-    /**
-     * The dynamic configuration for the adapter.
-     */
     protected array $config = [];
 
     /**
@@ -31,8 +36,6 @@ abstract class StorageAdapter implements StorageInterface
 
     public function readStream(string $path, array $options = []): mixed
     {
-        // Default implementation: Read file into memory and create a temporary stream.
-        // Not efficient, but ensures compatibility if not overridden.
         $contents = $this->get($path);
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $contents);
@@ -43,7 +46,6 @@ abstract class StorageAdapter implements StorageInterface
 
     public function writeStream(string $path, $resource, array $options = []): bool
     {
-        // Not efficient, override in specific adapters.
         $contents = stream_get_contents($resource);
 
         return $this->put($path, $contents, $options);

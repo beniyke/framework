@@ -1,4 +1,15 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * Anchor Framework
+ *
+ * Framework component: radio.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 $attributes = $radio['attributes'] ?? [];
 $attributes['type'] = 'radio';
 $old_value = $radio['value'] ?? null;

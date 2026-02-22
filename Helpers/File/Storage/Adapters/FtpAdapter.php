@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * The FTP connection.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Helpers\File\Storage\Adapters;
 
 use Helpers\File\Storage\StorageAdapter;
@@ -9,11 +17,6 @@ use RuntimeException;
 
 class FtpAdapter extends StorageAdapter
 {
-    /**
-     * The FTP connection.
-     *
-     * @var \FTP\Connection|null
-     */
     protected $connection = null;
 
     protected string $host;

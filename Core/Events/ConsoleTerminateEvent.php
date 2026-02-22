@@ -7,8 +7,12 @@ namespace Core\Events;
 class ConsoleTerminateEvent
 {
     /**
-     * Create a new event instance.
-     */
+ * Anchor Framework
+ *
+ * Create a new event instance.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     public function __construct()
     {
     }

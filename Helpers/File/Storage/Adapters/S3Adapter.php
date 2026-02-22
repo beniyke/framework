@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Class S3Adapter implementation.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Helpers\File\Storage\Adapters;
 
 use Helpers\File\Storage\StorageAdapter;
@@ -154,19 +162,19 @@ class S3Adapter extends StorageAdapter
         $host = parse_url($this->endpoint, PHP_URL_HOST);
         $uri = '/' . $this->bucket . '/' . ltrim($path, '/');
 
-        // Expiration Logic: X-Amz-Expires is seconds from now, but strict S3 uses duration.
-        // We pass the duration in X-Amz-Expires.
-        // Current timestamp is X-Amz-Date.
+        /**
+         * Expiration Logic: X-Amz-Expires is seconds from now, but strict S3 uses duration.
+         * The duration in X-Amz-Expires is passed.
+         * Current timestamp is X-Amz-Date.
+         */
 
         $timestamp = time();
         $longDate = gmdate('Ymd\THis\Z', $timestamp);
         $shortDate = gmdate('Ymd', $timestamp);
         $expirationSeconds = $expiration - time(); // If absolute time passed
         if ($expiration > $timestamp) {
-            // It's a timestamp in the future, calculate duration
             $duration = $expiration - $timestamp;
         } else {
-            // It's likely a duration (TTL) in seconds
             $duration = $expiration;
         }
 
@@ -191,28 +199,27 @@ class S3Adapter extends StorageAdapter
 
         ksort($queryParams);
 
-        // Canonical Query String
         $canonicalQueryString = [];
         foreach ($queryParams as $key => $value) {
             $canonicalQueryString[] = rawurlencode($key) . '=' . rawurlencode((string)$value);
         }
         $canonicalQueryStringStr = implode('&', $canonicalQueryString);
 
-        // Canonical Request
-        // METHOD
-        // URI
-        // QUERY
-        // HEADERS
-        // SIGNED HEADERS
-        // PAYLOAD HASH (UNSIGNED-PAYLOAD)
+        /**
+         * Canonical Request
+         * METHOD
+         * URI
+         * QUERY
+         * HEADERS
+         * SIGNED HEADERS
+         * PAYLOAD HASH (UNSIGNED-PAYLOAD)
+         */
 
         $canonicalHeaders = "host:{$host}\n";
         $signedHeaders = "host";
         $payloadHash = 'UNSIGNED-PAYLOAD';
 
         $canonicalRequest = "GET\n$uri\n$canonicalQueryStringStr\n$canonicalHeaders\n$signedHeaders\n$payloadHash";
-
-        // String to Sign
         $stringToSign = "AWS4-HMAC-SHA256\n$longDate\n$credentialScope\n" . hash('sha256', $canonicalRequest);
 
         // Signature
@@ -222,8 +229,6 @@ class S3Adapter extends StorageAdapter
         $kService = hash_hmac('sha256', 's3', $kRegion, true);
         $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
         $signature = hash_hmac('sha256', $stringToSign, $kSigning);
-
-        // Construct Final URL
 
         $finalUrl = rtrim($this->endpoint, '/') . $uri . '?' . $canonicalQueryStringStr . '&X-Amz-Signature=' . $signature;
 
@@ -452,7 +457,6 @@ class S3Adapter extends StorageAdapter
         $dateLong = gmdate('Ymd\THis\Z', $timestamp);
         $dateShort = gmdate('Ymd', $timestamp);
 
-        // Payload Hash
         if (is_resource($payload)) {
             $payloadHash = 'UNSIGNED-PAYLOAD'; // Optimization for streams
         } else {

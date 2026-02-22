@@ -2,15 +2,20 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * All of the dispatched events.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Testing\Fakes;
 
 use PHPUnit\Framework\Assert as PHPUnit;
 
 class EventFake
 {
-    /**
-     * All of the dispatched events.
-     */
     protected array $events = [];
 
     public function dispatch(object $event): void

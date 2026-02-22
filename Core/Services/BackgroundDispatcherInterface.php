@@ -7,9 +7,11 @@ namespace Core\Services;
 interface BackgroundDispatcherInterface
 {
     /**
-     * Run all background tasks (Queues, Schedules, Deferred tasks).
-     *
-     * @return string Final output/status message.
-     */
+ * Anchor Framework
+ *
+ * Run all background tasks (Queues, Schedules, Deferred tasks).
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     public function run(): string;
 }

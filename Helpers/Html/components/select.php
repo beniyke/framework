@@ -1,4 +1,15 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * Anchor Framework
+ *
+ * Framework component: select.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 $selected_value = $select['value'] ?? $select['options']['selected'] ?? null;
 
 $options = $select['options'] ?? ['data' => [], 'description' => false];

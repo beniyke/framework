@@ -7,9 +7,11 @@ namespace Core\Services;
 interface MaintenanceRunnerInterface
 {
     /**
-     * Run all maintenance tasks (Queues, Schedules, Deferred tasks).
-     *
-     * @return string Final output/status message.
-     */
+ * Anchor Framework
+ *
+ * Run all maintenance tasks (Queues, Schedules, Deferred tasks).
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     public function run(): string;
 }

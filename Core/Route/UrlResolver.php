@@ -3,6 +3,14 @@
 declare(strict_types=1);
 
 /**
+ * Anchor Framework
+ *
+ * Class UrlResolver implementation.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
+/**
  * Encapsulates the logic for resolving URLs to controller methods
  * within the application.
  *

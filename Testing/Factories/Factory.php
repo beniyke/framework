@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * The model the factory is for.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Testing\Factories;
 
 use Database\BaseModel;
@@ -9,9 +17,6 @@ use Database\Collections\ModelCollection;
 
 abstract class Factory
 {
-    /**
-     * The model the factory is for.
-     */
     protected string $model;
 
     /**

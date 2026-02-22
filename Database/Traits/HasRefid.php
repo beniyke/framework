@@ -9,8 +9,12 @@ use Helpers\String\Str;
 trait HasRefid
 {
     /**
-     * Boot the trait to add automatic refid generation.
-     */
+ * Anchor Framework
+ *
+ * Boot the trait to add automatic refid generation.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     public static function bootHasRefid(): void
     {
         static::creating(function ($model) {

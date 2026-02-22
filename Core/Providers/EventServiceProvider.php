@@ -18,10 +18,12 @@ class EventServiceProvider extends ServiceProvider
     }
 
     /**
-     * The event listener mappings for the application.
-     *
-     * @var array<string, array<string>>
-     */
+ * Anchor Framework
+ *
+ * The event listener mappings for the application.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     protected array $listen = [
         KernelTerminateEvent::class => [
             ClearResourceCacheListener::class,

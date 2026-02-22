@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Class SyncDocsCommand implementation.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Cli\Commands\Runners;
 
 use Helpers\File\Adapters\Interfaces\FileMetaInterface;

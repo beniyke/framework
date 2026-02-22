@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * HydrateCommand handles the self-provisioning of the framework's core files.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Package\Commands;
 
 use Helpers\File\Paths;
@@ -13,9 +21,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
 
-/**
- * HydrateCommand handles the self-provisioning of the framework's core files.
- */
 class HydrateCommand extends Command
 {
     private const GITHUB_TAG_URL = "https://github.com/beniyke/anchor/archive/refs/tags/%s.zip";

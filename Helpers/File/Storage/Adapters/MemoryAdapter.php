@@ -2,17 +2,20 @@
 
 declare(strict_types=1);
 
+/**
+* Anchor Framework
+*
+* The in-memory storage.
+*
+* @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+*/
+
 namespace Helpers\File\Storage\Adapters;
 
 use Helpers\File\Storage\StorageAdapter;
 
 class MemoryAdapter extends StorageAdapter
 {
-    /**
-     * The in-memory storage.
-     *
-     * @var array<string, string>
-     */
     protected array $storage = [];
 
     /**

@@ -2,15 +2,20 @@
 
 declare(strict_types=1);
 
+/**
+* Anchor Framework
+*
+* Freeze time at a specific point.
+*
+* @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+*/
+
 namespace Testing\Concerns;
 
 use Carbon\Carbon;
 
 trait InteractsWithTime
 {
-    /**
-     * Freeze time at a specific point.
-     */
     protected function freezeTime($time = null): self
     {
         Carbon::setTestNow($time ?? Carbon::now());

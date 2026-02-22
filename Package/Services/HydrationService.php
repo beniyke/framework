@@ -2,16 +2,22 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * HydrationService handles the downloading and unpacking of framework core files.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Package\Services;
 
 use Helpers\File\FileSystem;
+use Helpers\File\Paths;
 use Helpers\Http\Client\Curl;
 use RuntimeException;
 use ZipArchive;
 
-/**
- * HydrationService handles the downloading and unpacking of framework core files.
- */
 class HydrationService
 {
     private const GITHUB_API_URL = "https://api.github.com/repos/beniyke/anchor/releases/latest";
@@ -132,16 +138,23 @@ class HydrationService
 
             if ($match) {
                 // Ensure target directory exists
-                $target = $extractPath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+                $target = Paths::join($extractPath, str_replace('/', DIRECTORY_SEPARATOR, $relativePath));
 
                 if (str_ends_with($name, '/')) {
                     FileSystem::mkdir($target);
                 } else {
                     FileSystem::mkdir(dirname($target));
-                    if (FileSystem::copy("zip://{$zipPath}#{$name}", $target)) {
-                        $extractedCount++;
+                    $stream = $zip->getStream($name);
+                    if ($stream !== false) {
+                        $content = stream_get_contents($stream);
+                        fclose($stream);
+                        if (FileSystem::put($target, $content)) {
+                            $extractedCount++;
+                        } else {
+                            $errors[] = "Failed to write: {$relativePath}";
+                        }
                     } else {
-                        $errors[] = "Failed to extract: {$relativePath}";
+                        $errors[] = "Failed to extract (stream): {$relativePath}";
                     }
                 }
             }

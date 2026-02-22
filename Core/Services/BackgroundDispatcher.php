@@ -56,8 +56,12 @@ class BackgroundDispatcher implements BackgroundDispatcherInterface
     }
 
     /**
-     * Execute all payloads currently in the deferrer.
-     */
+ * Anchor Framework
+ *
+ * Execute all payloads currently in the deferrer.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     private function runDeferredTasks(): string
     {
         if (!$this->deferrer->hasPayload()) {

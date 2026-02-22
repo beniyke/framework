@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * Class DatabaseTestHelper implementation.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Testing\Support;
 
 use App\Models\User;
@@ -80,7 +88,7 @@ class DatabaseTestHelper
             return;
         }
 
-        $pattern = $migrationPath . DIRECTORY_SEPARATOR . '*.php';
+        $pattern = Paths::join($migrationPath, '*.php');
         $files = glob($pattern);
 
         if ($files === false) {
@@ -120,7 +128,7 @@ class DatabaseTestHelper
             return;
         }
 
-        $files = glob($migrationPath . DIRECTORY_SEPARATOR . '*.php');
+        $files = glob(Paths::join($migrationPath, '*.php'));
         if ($files === false) {
             return;
         }

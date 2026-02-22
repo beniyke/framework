@@ -10,13 +10,12 @@ use Helpers\File\Paths;
 trait GenerateScheduleTrait
 {
     /**
-     * Generate a new schedule class.
-     *
-     * @param string      $name
-     * @param string|null $module
-     *
-     * @return array
-     */
+ * Anchor Framework
+ *
+ * Generate a new schedule class.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     public function schedule(string $name, ?string $module = null): array
     {
         $classname = ucfirst($name) . 'Schedule';

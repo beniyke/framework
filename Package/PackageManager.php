@@ -20,6 +20,7 @@ use Helpers\File\Adapters\Interfaces\FileManipulationInterface;
 use Helpers\File\Adapters\Interfaces\FileMetaInterface;
 use Helpers\File\Adapters\Interfaces\FileReadWriteInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
+use Helpers\File\Paths;
 use RuntimeException;
 use Throwable;
 
@@ -62,7 +63,7 @@ class PackageManager
 
     public function getManifest(string $packagePath): array
     {
-        $setupFile = $packagePath . DIRECTORY_SEPARATOR . 'setup.php';
+        $setupFile = Paths::join($packagePath, 'setup.php');
         if ($this->fileMeta->isFile($setupFile)) {
             $manifest = require $setupFile;
             if (is_array($manifest)) {
@@ -75,7 +76,7 @@ class PackageManager
 
     public function publishConfig(string $packagePath): int
     {
-        $source = $packagePath . DIRECTORY_SEPARATOR . 'Config';
+        $source = Paths::join($packagePath, 'Config');
         if (!$this->fileMeta->isDir($source)) {
             return 0;
         }
@@ -87,7 +88,7 @@ class PackageManager
 
     public function publishMigrations(string $packagePath): int
     {
-        $source = $packagePath . DIRECTORY_SEPARATOR . 'Database' . DIRECTORY_SEPARATOR . 'Migrations';
+        $source = Paths::join($packagePath, 'Database', 'Migrations');
         if (!$this->fileMeta->isDir($source)) {
             return 0;
         }
@@ -120,7 +121,7 @@ class PackageManager
 
         // Publish Migrations and track which files were published
         try {
-            $migrationSource = $packagePath . DIRECTORY_SEPARATOR . 'Database' . DIRECTORY_SEPARATOR . 'Migrations';
+            $migrationSource = Paths::join($packagePath, 'Database', 'Migrations');
 
             if ($this->fileMeta->isDir($migrationSource)) {
                 $files = scandir($migrationSource);
@@ -186,7 +187,7 @@ class PackageManager
         $items = new FilesystemIterator($source, FilesystemIterator::SKIP_DOTS);
 
         foreach ($items as $item) {
-            $target = $dest . DIRECTORY_SEPARATOR . $item->getBasename();
+            $target = Paths::join($dest, $item->getBasename());
 
             if ($item->isDir()) {
                 $count += $this->copyDirectoryContents($item->getPathname(), $target);
@@ -291,7 +292,7 @@ class PackageManager
     public function checkStatus(string $packagePath, array $manifest = []): string
     {
         // Check Configs
-        $configSource = $packagePath . DIRECTORY_SEPARATOR . 'Config';
+        $configSource = Paths::join($packagePath, 'Config');
         if ($this->fileMeta->isDir($configSource)) {
             $files = scandir($configSource);
             foreach ($files as $file) {
@@ -305,7 +306,7 @@ class PackageManager
         }
 
         // Check Migrations
-        $migrationSource = $packagePath . DIRECTORY_SEPARATOR . 'Database/Migrations';
+        $migrationSource = Paths::join($packagePath, 'Database', 'Migrations');
         if ($this->fileMeta->isDir($migrationSource)) {
             $files = scandir($migrationSource);
             foreach ($files as $file) {
@@ -357,7 +358,7 @@ class PackageManager
     public function uninstall(string $packagePath, array $manifest = []): void
     {
         // Rollback & Delete Migrations
-        $migrationSource = $packagePath . DIRECTORY_SEPARATOR . 'Database' . DIRECTORY_SEPARATOR . 'Migrations';
+        $migrationSource = Paths::join($packagePath, 'Database', 'Migrations');
         $migrationDest = $this->paths->storagePath('database/migrations');
 
         if ($this->fileMeta->isDir($migrationSource)) {
@@ -394,7 +395,7 @@ class PackageManager
         }
 
         // Delete Configs
-        $configSource = $packagePath . DIRECTORY_SEPARATOR . 'Config';
+        $configSource = Paths::join($packagePath, 'Config');
         $configDest = $this->paths->appPath('Config');
 
         if ($this->fileMeta->isDir($configSource)) {
@@ -422,7 +423,7 @@ class PackageManager
         $items = new FilesystemIterator($source, FilesystemIterator::SKIP_DOTS);
 
         foreach ($items as $item) {
-            $target = $dest . DIRECTORY_SEPARATOR . $item->getBasename();
+            $target = Paths::join($dest, $item->getBasename());
 
             if ($item->isDir()) {
                 $this->removeDirectoryContents($item->getPathname(), $target);
@@ -458,7 +459,7 @@ class PackageManager
         $items = new FilesystemIterator($source, FilesystemIterator::SKIP_DOTS);
 
         foreach ($items as $item) {
-            $target = $baseDest . DIRECTORY_SEPARATOR . $item->getBasename();
+            $target = Paths::join($baseDest, $item->getBasename());
 
             if ($item->isDir()) {
                 $this->collectFiles($item->getPathname(), $target, $collection);

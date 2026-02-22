@@ -16,6 +16,7 @@ namespace Security;
 use Core\Services\ConfigServiceInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
 use Helpers\File\FileSystem;
+use Helpers\File\Paths;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -209,18 +210,18 @@ class ProductionScanner
 
                 // Skip Config files and definition sites
                 $isConfig = str_contains($filename, 'Config');
-                $isSystemHelpers = str_contains($filename, 'System' . DIRECTORY_SEPARATOR . 'Helpers');
+                $isSystemHelpers = str_contains($filename, Paths::join('System', 'Helpers'));
                 $isGlobals = str_contains($filename, 'Globals');
                 $isDebugger = str_contains($filename, 'Debugger');
                 $isVarDump = str_contains($filename, 'VarDump.php');
                 $isDockCommand = str_contains($filename, 'DockCommand.php');
                 $isEnvironment = str_contains($filename, 'Environment.php');
                 $isDotenv = str_contains($filename, 'Dotenv');
-                $isCli = str_contains($filename, 'System' . DIRECTORY_SEPARATOR . 'Cli');
-                $isLowLevelFramework = str_contains($filename, 'System' . DIRECTORY_SEPARATOR . 'Core') ||
-                    str_contains($filename, 'System' . DIRECTORY_SEPARATOR . 'Queue') ||
-                    str_contains($filename, 'System' . DIRECTORY_SEPARATOR . 'Cron') ||
-                    str_contains($filename, 'System' . DIRECTORY_SEPARATOR . 'Package');
+                $isCli = str_contains($filename, Paths::join('System', 'Cli'));
+                $isLowLevelFramework = str_contains($filename, Paths::join('System', 'Core')) ||
+                    str_contains($filename, Paths::join('System', 'Queue')) ||
+                    str_contains($filename, Paths::join('System', 'Cron')) ||
+                    str_contains($filename, Paths::join('System', 'Package'));
 
                 $content = FileSystem::get($filename);
 
@@ -253,7 +254,7 @@ class ProductionScanner
                     if (preg_match($pattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
                         $matchIndex = $matches[0][1];
                         $line = (int) (substr_count(substr($content, 0, $matchIndex), "\n") + 1);
-                        $relPath = str_replace($this->paths->basePath() . DIRECTORY_SEPARATOR, '', $filename);
+                        $relPath = str_replace(Paths::join($this->paths->basePath(), ''), '', $filename);
                         $io->error("{$message} In: {$relPath}:{$line}");
                         $passed = false;
                     }

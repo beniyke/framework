@@ -66,7 +66,7 @@ class DownloadCommand extends Command
         // Handle casing: "ally" -> "Ally"
         $localName = ucfirst($packageName);
         $url = self::GITHUB_ORG_URL . strtolower($packageName) . ".git";
-        $targetDir = Paths::basePath("packages" . DIRECTORY_SEPARATOR . $localName);
+        $targetDir = Paths::join(Paths::packagePath(), $localName);
 
         $io->title("Downloading Package: {$localName}");
         $io->text("Source: {$url}");

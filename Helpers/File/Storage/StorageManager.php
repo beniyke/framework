@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * The resolved storage disks.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Helpers\File\Storage;
 
 use Closure;
@@ -20,9 +28,6 @@ use InvalidArgumentException;
 
 class StorageManager
 {
-    /**
-     * The resolved storage disks.
-     */
     protected array $disks = [];
 
     /**

@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 /**
+ * Anchor Framework
+ *
  * Initializes the application, including autoloading,
  * error handling, and timezone configuration.
  *
- * @author BenIyke <beniyke34@gmail.com> | (twitter:@BigBeniyke)
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
+
 const MIN_PHP_VERSION = '8.2';
 $interface = php_sapi_name();
 $dir = __DIR__;

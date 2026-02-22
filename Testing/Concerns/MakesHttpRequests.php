@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+ * Anchor Framework
+ *
+ * The last response received by the test.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
+
 namespace Testing\Concerns;
 
 use Core\Kernel;
@@ -15,9 +23,6 @@ use PHPUnit\Framework\Assert as PHPUnit;
 
 trait MakesHttpRequests
 {
-    /**
-     * The last response received by the test.
-     */
     protected ?Response $lastResponse = null;
 
     /**

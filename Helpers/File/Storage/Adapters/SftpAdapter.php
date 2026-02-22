@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+/**
+* Anchor Framework
+*
+* The SSH2 connection.
+*
+* @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+*/
+
 namespace Helpers\File\Storage\Adapters;
 
 use Helpers\File\Storage\StorageAdapter;
@@ -19,11 +27,6 @@ use function ssh2_sftp_unlink;
 
 class SftpAdapter extends StorageAdapter
 {
-    /**
-     * The SSH2 connection.
-     *
-     * @var resource|null
-     */
     protected $connection = null;
 
     /**

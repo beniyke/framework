@@ -9,8 +9,12 @@ use Testing\Factories\Factory;
 trait HasFactory
 {
     /**
-     * Create a new factory instance for the model.
-     */
+ * Anchor Framework
+ *
+ * Create a new factory instance for the model.
+ *
+ * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
+ */
     public static function factory(?int $count = null): Factory
     {
         $factory = Factory::factoryForModel(static::class);
