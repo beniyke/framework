@@ -670,7 +670,7 @@ class CodeFormatter
 
     private function isNumberedStepComment(string $comment): bool
     {
-        return (bool) preg_match('/^(\d+[\.\)\-:\s]|step\s*\d+)/i', $comment);
+        return (bool) preg_match('/^(\d+[\.\)\-:\s]|step\s*\d+|[\[\(]\d+[\]\)]|[a-z][\.\)\-:\s])/i', $comment);
     }
 
     private function isObviousActionComment(string $comment, array $lines, int $currentIndex): bool

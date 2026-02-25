@@ -147,7 +147,7 @@ class EmailComponent
     }
 
     /**
-     * 5. Callouts: Panel, Action Button, and Dividers.
+     * Callouts: Panel, Action Button, and Dividers.
      */
     public function panel(string $value): self
     {

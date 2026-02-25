@@ -110,7 +110,7 @@ class BaseModel implements JsonSerializable
             $this->table = strtolower($className);
         }
 
-        $this->attributes = $attributes;
+        $this->attributes = array_merge($this->attributes, $attributes);
         $this->exists = $exists;
 
         if (! $exists) {

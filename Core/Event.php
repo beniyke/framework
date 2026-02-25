@@ -106,6 +106,16 @@ class Event
         }
     }
 
+    public static function clearListeners(): void
+    {
+        self::$listeners = [];
+    }
+
+    public static function listeners(string $event): array
+    {
+        return self::$listeners[$event] ?? [];
+    }
+
     public static function reset(): void
     {
         self::$fake = null;
