@@ -14,11 +14,14 @@ declare(strict_types=1);
 
 namespace Core;
 
+use Closure;
 use Core\Events\KernelTerminateEvent;
 use Core\Ioc\ContainerInterface;
 use Core\Middleware\MiddlewarePipeline;
+use Core\Middleware\MiddlewareResolver;
 use Core\Route\RouteMatch;
 use Core\Route\UrlResolver;
+use Core\Services\ConfigServiceInterface;
 use Helpers\File\Adapters\Interfaces\FileReadWriteInterface;
 use Helpers\File\Adapters\Interfaces\PathResolverInterface;
 use Helpers\Http\Flash;
@@ -28,7 +31,7 @@ use Helpers\String\Inflector;
 
 class App
 {
-    public const VERSION = '2.5.0';
+    public const VERSION = '2.6.0';
 
     private ContainerInterface $container;
 
@@ -83,15 +86,24 @@ class App
             return $this->handleNotFoundResponse();
         }
 
-        if (is_array($resolvedRoute) && ! empty($resolvedRoute['redirect'])) {
-            return $this->response->redirect($resolvedRoute['redirect']);
+        if (is_array($resolvedRoute)) {
+            if (! empty($resolvedRoute['redirect'])) {
+                return $this->response->redirect($resolvedRoute['redirect']);
+            }
+
+            if (isset($resolvedRoute['error']) && $resolvedRoute['error'] === 405) {
+                return $this->handleMethodNotAllowedResponse();
+            }
         }
 
         $match = $resolvedRoute;
 
         $this->hydrateRouteContext($this->request, $match);
 
-        if ($this->request->isStateChanging()) {
+        // Bypass security checks for exclusive manual routes
+        $isExclusive = ($match instanceof RouteMatch) ? $match->isExclusive() : ($match['is_exclusive'] ?? false);
+
+        if (! $isExclusive && $this->request->isStateChanging()) {
             if (! $this->request->isSecurityValid()) {
                 return $this->handleSecurityFailure();
             }
@@ -100,8 +112,39 @@ class App
         return $this->processThroughMiddleware($match);
     }
 
+    private function handleMethodNotAllowedResponse(): Response
+    {
+        if ($this->request->expectsJson()) {
+            return $this->response
+                ->status(405)
+                ->json([
+                    'status' => false,
+                    'message' => 'Method not allowed',
+                    'error' => '405 Method Not Allowed'
+                ]);
+        }
+
+        $not_allowed = $this->paths->coreViewTemplatePath('405.html');
+        $content = $this->fileReadWrite->get($not_allowed);
+
+        return $this->response
+            ->header(['Content-Type' => 'text/html; charset=UTF-8'])
+            ->status(405)
+            ->body($content);
+    }
+
     private function handleNotFoundResponse(): Response
     {
+        if ($this->request->expectsJson()) {
+            return $this->response
+                ->status(404)
+                ->json([
+                    'status' => false,
+                    'message' => 'Resource not found',
+                    'error' => '404 Not Found'
+                ]);
+        }
+
         $not_found = $this->paths->coreViewTemplatePath('notfound.html');
         $content = $this->fileReadWrite->get($not_found);
 
@@ -130,6 +173,10 @@ class App
             return $this->dispatch($match);
         }
 
+        // Resolve middleware groups, aliases, and closures
+        $resolver = new MiddlewareResolver($this->container->get(ConfigServiceInterface::class));
+        $middlewares = $resolver->resolve($middlewares);
+
         $dispatch = function (Request $request) use ($match) {
             return $this->dispatch($match);
         };
@@ -147,7 +194,7 @@ class App
         $controller = $match->getController();
         $method = $match->getMethod();
 
-        if (preg_match('/App\\\\([^\\\\]+)\\\\Controllers\\\\([^\\\\]+)Controller/', $controller, $matches)) {
+        if (is_string($controller) && preg_match('/App\\\\([^\\\\]+)\\\\Controllers\\\\([^\\\\]+)Controller/', $controller, $matches)) {
             $domain = $matches[1];
             $entity = $matches[2];
 
@@ -165,10 +212,17 @@ class App
 
     private function dispatch(RouteMatch $match): Response
     {
-        $controller = $this->container->get($match->getController());
-        $method = $match->getMethod();
+        $controller = $match->getController();
         $parameters = $match->getParameters();
 
-        return $this->container->call([$controller, $method], $parameters);
+        if ($controller instanceof Closure) {
+            $result = $this->container->call($controller, $parameters);
+        } else {
+            $instance = $this->container->get($controller);
+            $method = $match->getMethod();
+            $result = $this->container->call([$instance, $method], $parameters);
+        }
+
+        return $result instanceof Response ? $result : new Response((string) $result);
     }
 }

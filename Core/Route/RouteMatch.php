@@ -12,11 +12,12 @@ declare(strict_types=1);
 
 namespace Core\Route;
 
+use Closure;
 use Helpers\Data\DTO;
 
 class RouteMatch extends DTO
 {
-    private readonly string $controller;
+    private readonly string|Closure $controller;
 
     private readonly string $method;
 
@@ -26,9 +27,16 @@ class RouteMatch extends DTO
 
     private readonly array $context;
 
-    public function getController(): string
+    private readonly bool $is_exclusive;
+
+    public function getController(): string|Closure
     {
         return $this->controller;
+    }
+
+    public function isExclusive(): bool
+    {
+        return $this->is_exclusive ?? false;
     }
 
     public function getMethod(): string

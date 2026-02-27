@@ -93,6 +93,10 @@ class ViewEngine implements ViewInterface
 
     private function resolveTemplatePath(string $template): string
     {
+        if (FileSystem::isAbsolute($template)) {
+            return $this->resolveExtension($template);
+        }
+
         $template = str_replace('.', DIRECTORY_SEPARATOR, $template);
 
         $full_path = $this->template_path . DIRECTORY_SEPARATOR . $this->resolveExtension($template);
@@ -152,9 +156,12 @@ class ViewEngine implements ViewInterface
 
         $level = ob_get_level();
         ob_start();
+
         try {
-            extract($data, EXTR_SKIP);
-            include $view_template;
+            (static function (string $template, array $data) {
+                extract($data);
+                include $template;
+            })($view_template, $data);
 
             return ltrim(ob_get_clean());
         } catch (Throwable $e) {

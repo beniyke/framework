@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+use Core\Route\Route;
+// use App\{module}\Controllers\{Controller}Controller;
+
+/**
+ * {module} Module Routes
+ */
+
+// Route::get('path', [{Controller}Controller::class, 'index']);

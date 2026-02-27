@@ -42,6 +42,30 @@ trait MakesHttpRequests
     }
 
     /**
+     * Visit the given URI with a PUT request.
+     */
+    public function put(string $uri, array $data = [], array $headers = []): Response
+    {
+        return $this->call('PUT', $uri, $data, [], [], $headers);
+    }
+
+    /**
+     * Visit the given URI with a PATCH request.
+     */
+    public function patch(string $uri, array $data = [], array $headers = []): Response
+    {
+        return $this->call('PATCH', $uri, $data, [], [], $headers);
+    }
+
+    /**
+     * Visit the given URI with a DELETE request.
+     */
+    public function delete(string $uri, array $data = [], array $headers = []): Response
+    {
+        return $this->call('DELETE', $uri, $data, [], [], $headers);
+    }
+
+    /**
      * Visit the given URI with a JSON request.
      */
     public function json(string $method, string $uri, array $data = [], array $headers = []): Response
@@ -63,6 +87,8 @@ trait MakesHttpRequests
         $_SERVER = array_merge($_SERVER, $server);
         $_SERVER['REQUEST_METHOD'] = strtoupper($method);
         $_SERVER['REQUEST_URI'] = $uri;
+
+        $_GET = $_POST = $_FILES = [];
 
         if (strtoupper($method) === 'POST') {
             $_POST = $parameters;

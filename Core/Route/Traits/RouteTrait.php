@@ -5,15 +5,10 @@ declare(strict_types=1);
 /**
  * Anchor Framework
  *
- * Trait RouteTrait implementation.
+ * Provides routing functionality for web applications, including methods for checking route existence,
+ * resolving middleware routes, handling wildcards, and stripping common prefixes from route strings.
  *
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
- */
-
-/**
- * Provides routing functionality for web applications, including methods for checking route existence, resolving middleware routes, handling wildcards, and stripping common prefixes from route strings.
- *
- * @author BenIyke <beniyke34@gmail.com> | (twitter:@BigBeniyke)
  */
 
 namespace Core\Route\Traits;

@@ -375,6 +375,14 @@ class FileSystem
     }
 
     /**
+     * Determine if a path is absolute.
+     */
+    public static function isAbsolute(string $path): bool
+    {
+        return str_starts_with($path, '/') || (strlen($path) > 3 && ctype_alpha($path[0]) && $path[1] === ':' && ($path[2] === '\\' || $path[2] === '/'));
+    }
+
+    /**
      * List files and directories within a given path, excluding '.' and '..'.
      *
      * @return string[]

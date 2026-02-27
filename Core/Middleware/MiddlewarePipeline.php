@@ -61,15 +61,19 @@ class MiddlewarePipeline
 
     private function carry(): Closure
     {
-        return function (Closure $stack, string $middleware) {
+        return function (Closure $stack, string|Closure $middleware) {
             return function (Request $request, Response $response) use ($stack, $middleware) {
+                if ($middleware instanceof Closure) {
+                    return $middleware($request, $response, $stack);
+                }
+
                 $instance = $this->container->get($middleware);
 
                 if (!$instance instanceof MiddlewareInterface) {
                     throw new RuntimeException(
                         sprintf(
                             'Middleware [%s] must implement %s',
-                            $middleware,
+                            is_string($middleware) ? $middleware : 'Closure',
                             MiddlewareInterface::class
                         )
                     );

@@ -53,3 +53,17 @@ if (! function_exists('system_path')) {
         return Paths::systemPath($path);
     }
 }
+
+if (! function_exists('view_path')) {
+    function view_path(?string $path = null, ?string $module = null): string
+    {
+        return Paths::viewPath($path, $module);
+    }
+}
+
+if (! function_exists('template_path')) {
+    function template_path(?string $path = null, ?string $module = null): string
+    {
+        return Paths::templatePath($path, $module);
+    }
+}

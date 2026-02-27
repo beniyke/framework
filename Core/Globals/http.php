@@ -10,6 +10,7 @@ declare(strict_types=1);
  * @author BenIyke <beniyke34@gmail.com> | Twitter: @BigBeniyke
  */
 
+use Core\Route\Route;
 use Helpers\Http\Client\Curl;
 use Helpers\Http\Flash;
 use Helpers\Http\Request;
@@ -58,6 +59,13 @@ if (! function_exists('route')) {
     function route(?string $uri = null, bool $re_route = false): string
     {
         return request()->route($uri, $re_route);
+    }
+}
+
+if (! function_exists('route_url')) {
+    function route_url(string $name, array $parameters = []): ?string
+    {
+        return Route::getUrl($name, $parameters);
     }
 }
 

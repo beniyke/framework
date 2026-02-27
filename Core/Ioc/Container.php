@@ -15,6 +15,8 @@ namespace Core\Ioc;
 use Closure;
 use Exception;
 use ReflectionClass;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -153,12 +155,22 @@ class Container implements ContainerInterface
         return $results;
     }
 
-    public function call(array $callback, array $parameters = []): mixed
+    public function call(callable|array $callback, array $parameters = []): mixed
     {
-        $method = new ReflectionMethod($callback[0], $callback[1]);
-        $dependencies = $this->resolveDependenciesForMethod($method, $parameters);
+        if (is_array($callback)) {
+            $reflection = new ReflectionMethod($callback[0], $callback[1]);
+        } else {
+            $reflection = new ReflectionFunction($callback);
+        }
 
-        return $method->invokeArgs($callback[0], $dependencies);
+        $dependencies = $this->resolveDependenciesForMethod($reflection, $parameters);
+
+        if ($reflection instanceof ReflectionMethod) {
+            /** @var array $callback */
+            return $reflection->invokeArgs($callback[0], $dependencies);
+        }
+
+        return $reflection->invokeArgs($dependencies);
     }
 
     public function disablePropertyInjection(): void
@@ -262,9 +274,11 @@ class Container implements ContainerInterface
         return (string) $type;
     }
 
-    protected function resolveDependenciesForMethod(ReflectionMethod $method, array $givenParameters = []): array
+    protected function resolveDependenciesForMethod(ReflectionFunctionAbstract $method, array $givenParameters = []): array
     {
-        $cacheKey = $method->getDeclaringClass()->getName() . '::' . $method->getName();
+        $cacheKey = ($method instanceof ReflectionMethod)
+            ? $method->getDeclaringClass()->getName() . '::' . $method->getName()
+            : 'Closure::' . spl_object_hash($method->getClosure());
         if (isset($this->dependencyCache[$cacheKey])) {
             return $this->resolveCachedDependencies($this->dependencyCache[$cacheKey], $givenParameters);
         }
@@ -277,9 +291,13 @@ class Container implements ContainerInterface
         $dependencyMetadata = [];
 
         foreach ($parameters as $parameter) {
-            if ($isAssociative && isset($givenParameters[$parameter->getName()])) {
+            if ($isAssociative && array_key_exists($parameter->getName(), $givenParameters)) {
                 $dependencies[] = $givenParameters[$parameter->getName()];
-                $dependencyMetadata[] = ['type' => 'given', 'name' => $parameter->getName()];
+                $dependencyMetadata[] = [
+                    'type' => 'given',
+                    'name' => $parameter->getName(),
+                    'parameter' => $parameter,
+                ];
 
                 continue;
             }
@@ -291,7 +309,12 @@ class Container implements ContainerInterface
                 $value = $givenParameters[$indexedParameterIndex];
                 $dependencies[] = $this->castToType($value, $type, $parameter);
 
-                $dependencyMetadata[] = ['type' => 'cast', 'value' => $value, 'typeName' => $this->getTypeName($type)];
+                $dependencyMetadata[] = [
+                    'type' => 'index',
+                    'index' => $indexedParameterIndex,
+                    'typeName' => $this->getTypeName($type),
+                    'parameter' => $parameter,
+                ];
 
                 $indexedParameterIndex++;
 
@@ -325,8 +348,16 @@ class Container implements ContainerInterface
     {
         $dependencies = [];
         foreach ($dependencyMetadata as $meta) {
-            if ($meta['type'] === 'given') {
+            if ($meta['type'] === 'given' && array_key_exists($meta['name'], $givenParameters)) {
                 $dependencies[] = $givenParameters[$meta['name']];
+            } elseif ($meta['type'] === 'index' && array_key_exists($meta['index'], $givenParameters)) {
+                $value = $givenParameters[$meta['index']];
+                /** @var ReflectionParameter $parameter */
+                $parameter = $meta['parameter'];
+                $dependencies[] = $this->castToType($value, $parameter->getType(), $parameter);
+            } elseif ($meta['type'] === 'given' || $meta['type'] === 'index') {
+                // Parameter not provided in this call, resolve normally (e.g. default value)
+                $dependencies[] = $this->resolveParameter($meta['parameter']);
             } elseif ($meta['type'] === 'value' || $meta['type'] === 'cast') {
                 $dependencies[] = $meta['value'];
             } else {

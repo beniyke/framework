@@ -64,6 +64,27 @@ class UrlResolver
 
         $uri = static::first(explode('?', ltrim($request->uri(), '/'))) ?? '';
         $this->url = $this->parseUrl($uri);
+
+        $this->loadManualRoutes();
+    }
+
+    /**
+     * Scan modules and load manual route maps.
+     */
+    private function loadManualRoutes(): void
+    {
+        $modulesPath = Paths::appSourcePath();
+        if (!is_dir($modulesPath)) {
+            return;
+        }
+
+        $modules = glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+        foreach ($modules as $modulePath) {
+            $mapFile = $modulePath . DIRECTORY_SEPARATOR . 'Route' . DIRECTORY_SEPARATOR . 'map.php';
+            if (is_file($mapFile)) {
+                require_once $mapFile;
+            }
+        }
     }
 
     public function route(): string
@@ -92,13 +113,51 @@ class UrlResolver
 
     public function resolve(): RouteMatch|array|null
     {
-        if (empty($this->url)) {
-            return $this->resolveEmptyUrl();
+        if ($match = Route::find($this->request->method(), $this->request->uri())) {
+            if (isset($match['error'])) {
+                return $match;
+            }
+
+            $parameters = $match['parameters'] ?? [];
+            $middleware = $match['middleware'] ?? [];
+
+            // Merge global middleware if not exclusive
+            if (! ($match['is_exclusive'] ?? false)) {
+                $globalMiddleware = $this->getMiddlewareStack() ?? [];
+                $middleware = array_merge($globalMiddleware, $middleware);
+            }
+
+            // Handle surgical exclusions
+            if (! empty($match['excluded_middleware'])) {
+                $excluded = $match['excluded_middleware'];
+                $middleware = array_filter($middleware, function ($m) use ($excluded) {
+                    return ! in_array($m, $excluded);
+                });
+            }
+
+            return new RouteMatch(array_merge($match, [
+                'middleware' => array_values(array_unique($middleware)),
+                'context' => [],
+            ]));
         }
 
-        $this->determineRelatedRoute();
+        if (empty($this->url)) {
+            $result = $this->resolveEmptyUrl();
+        } else {
+            $this->determineRelatedRoute();
+            $result = $this->resolveUrlWithSegments();
+        }
 
-        return $this->resolveUrlWithSegments();
+        if ($result && !($result instanceof RouteMatch && isset($result->error)) && !(is_array($result) && isset($result['error']))) {
+            return $result instanceof RouteMatch ? $result : new RouteMatch($result);
+        }
+
+        // Final resort: Manual Fallback Route
+        if ($fallback = Route::resolveFallback($this->request->uri())) {
+            return new RouteMatch(array_merge($fallback, ['context' => []]));
+        }
+
+        return $result; // Return the convention result (could be 404 or 405)
     }
 
     private function resolveEmptyUrl(): RouteMatch|array|null

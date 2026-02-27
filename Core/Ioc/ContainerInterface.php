@@ -83,15 +83,7 @@ interface ContainerInterface
      */
     public function tagged(string $tag): array;
 
-    /**
-     * Calls a class method and injects its dependencies.
-     *
-     * @param array $callback   An array containing the object and method name, e.g., [$object, 'method'].
-     * @param array $parameters An array of additional parameters to pass to the method.
-     *
-     * @return mixed The return value of the called method.
-     */
-    public function call(array $callback, array $parameters = []): mixed;
+    public function call(callable|array $callback, array $parameters = []): mixed;
 
     /**
      * Creates a new instance of a class, resolving its dependencies.

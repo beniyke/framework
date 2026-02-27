@@ -869,7 +869,10 @@ class Request
 
     public function expectsJson(): bool
     {
-        return $this->wantsJson();
+        return $this->wantsJson() ||
+            str_contains($this->header('content-type') ?? '', 'application/json') ||
+            str_starts_with($this->uri(), '/api') ||
+            $this->isAjax() || $this->routeIsApi();
     }
 
     public function accepts(string|array $contentTypes): bool
