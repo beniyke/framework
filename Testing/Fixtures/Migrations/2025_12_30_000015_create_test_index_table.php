@@ -16,18 +16,16 @@ use Database\Migration\BaseMigration;
 use Database\Schema\Schema;
 use Database\Schema\SchemaBuilder;
 
-class CreateTestIndexTableMigration extends BaseMigration
+class CreateTestIndexTable extends BaseMigration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('test_index_table')) {
-            Schema::create('test_index_table', function (SchemaBuilder $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('email');
-                $table->index('name', 'test_index_table_name_index');
-            });
-        }
+        Schema::createIfNotExists('test_index_table', function (SchemaBuilder $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email');
+            $table->index('name', 'test_index_table_name_index');
+        });
     }
 
     public function down(): void

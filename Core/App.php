@@ -31,7 +31,7 @@ use Helpers\String\Inflector;
 
 class App
 {
-    public const VERSION = '2.6.0';
+    public const VERSION = '2.7.0';
 
     private ContainerInterface $container;
 
@@ -100,14 +100,8 @@ class App
 
         $this->hydrateRouteContext($this->request, $match);
 
-        // Bypass security checks for exclusive manual routes
         $isExclusive = ($match instanceof RouteMatch) ? $match->isExclusive() : ($match['is_exclusive'] ?? false);
-
-        if (! $isExclusive && $this->request->isStateChanging()) {
-            if (! $this->request->isSecurityValid()) {
-                return $this->handleSecurityFailure();
-            }
-        }
+        $this->request->setRouteContext('is_exclusive', $isExclusive);
 
         return $this->processThroughMiddleware($match);
     }
@@ -153,18 +147,6 @@ class App
             ->notFound($content);
     }
 
-    private function handleSecurityFailure(): Response
-    {
-        $referer_route = $this->request->refererRoute();
-        $fallback_route = '/';
-        $target_route = $referer_route ?? $fallback_route;
-        $target_url = $this->request->baseUrl($target_route);
-
-        $this->flash->error('Security check failed. Please try again.');
-
-        return $this->response->redirect($target_url);
-    }
-
     private function processThroughMiddleware(RouteMatch $match): Response
     {
         $middlewares = $match->getMiddleware();
@@ -174,7 +156,11 @@ class App
         }
 
         // Resolve middleware groups, aliases, and closures
-        $resolver = new MiddlewareResolver($this->container->get(ConfigServiceInterface::class));
+        $systemGroups = $this->container->has(Kernel::class)
+            ? $this->container->get(Kernel::class)->getMiddlewareGroups()
+            : [];
+
+        $resolver = new MiddlewareResolver($this->container->get(ConfigServiceInterface::class), $systemGroups);
         $middlewares = $resolver->resolve($middlewares);
 
         $dispatch = function (Request $request) use ($match) {

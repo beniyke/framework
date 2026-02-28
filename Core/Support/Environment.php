@@ -21,8 +21,13 @@ class Environment
     protected static function getBaseEnv(): string
     {
         $env = getenv('APP_ENV') ?: self::ENV_DEVELOPMENT;
+        $env = strtolower($env);
 
-        return strtolower($env);
+        if ($env === 'testing') {
+            return self::ENV_TEST;
+        }
+
+        return $env;
     }
 
     public static function current(): string

@@ -228,6 +228,7 @@ class Migrator
             }
         }
 
+        $names = array_unique($names);
         sort($names);
 
         return $names;
@@ -239,7 +240,7 @@ class Migrator
             throw new RuntimeException("Migration file {$file} not found.");
         }
 
-        $filePath = $this->migrationMap[$file];
+        $filePath = realpath($this->migrationMap[$file]) ?: $this->migrationMap[$file];
 
         $className = preg_replace('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '', $file);
         $className = str_replace(['_', '-'], ' ', $className);
@@ -247,10 +248,16 @@ class Migrator
         $className = str_replace(' ', '', $className);
 
         $namespace = $this->getNamespace($filePath);
-        $fullClassName = $namespace ? "{$namespace}\\{$className}" : $className;
-        if (! class_exists($fullClassName)) {
+        $namespacedClass = $namespace ? "{$namespace}\\{$className}" : $className;
+
+        $existsNC = class_exists($namespacedClass, false);
+        $existsC = class_exists($className, false);
+
+        if (!$existsNC && !$existsC) {
             require_once $filePath;
         }
+
+        $fullClassName = class_exists($namespacedClass, false) ? $namespacedClass : $className;
 
         if (class_exists($fullClassName)) {
             $instance = new $fullClassName();

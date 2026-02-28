@@ -18,9 +18,12 @@ use Database\Helpers\DatabaseOperationConfig;
 use Database\Migration\Migrator;
 use Database\NullConnection;
 use Helpers\File\Paths;
+use Throwable;
 
 trait RefreshDatabase
 {
+    protected static bool $migrated = false;
+
     public function refreshDatabase(): void
     {
         if (isset($this->refreshDatabase) && $this->refreshDatabase === false) {
@@ -33,6 +36,15 @@ trait RefreshDatabase
             $connection->rollBack();
         }
 
+        // Reset all auto-increment sequences for SQLite to ensure IDs always start from 1
+        if (str_contains(strtolower($connection->getDriver()), 'sqlite')) {
+            try {
+                $connection->statement("DELETE FROM sqlite_sequence");
+            } catch (Throwable $e) {
+                // sqlite_sequence might not exist if no autoincrement tables were ever created
+            }
+        }
+
         $this->runDatabaseMigrations();
         $this->beginDatabaseTransaction();
 
@@ -43,6 +55,10 @@ trait RefreshDatabase
 
     protected function runDatabaseMigrations(): void
     {
+        if (static::$migrated) {
+            return;
+        }
+
         $connection = resolve(ConnectionInterface::class);
 
         if ($connection instanceof NullConnection) {
@@ -68,9 +84,7 @@ trait RefreshDatabase
         $migrator = new Migrator($connection, $paths);
         $migrator->run();
 
-        $this->beforeApplicationDestroyed(function () use ($migrator) {
-            $migrator->reset();
-        });
+        static::$migrated = true;
     }
 
     protected function beginDatabaseTransaction(): void

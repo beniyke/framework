@@ -12,8 +12,10 @@ declare(strict_types=1);
 
 namespace Testing\Mocks;
 
-use App\Services\Auth\Interfaces\AuthServiceInterface;
+use Core\Contracts\AuthServiceInterface;
 use Helpers\Data\Contracts\DataTransferObject;
+use Security\Auth\AuthResult;
+use Security\Auth\Contracts\Authenticatable;
 
 class AuthMock implements AuthServiceInterface
 {
@@ -27,14 +29,14 @@ class AuthMock implements AuthServiceInterface
         return $this;
     }
 
-    public function user(): ?object
+    public function user(): ?Authenticatable
     {
         return null;
     }
 
-    public function login(DataTransferObject $request): bool
+    public function login(DataTransferObject $request): AuthResult
     {
-        return false;
+        return AuthResult::failure('Mock login failed.');
     }
 
     public function logout(): bool
@@ -47,7 +49,7 @@ class AuthMock implements AuthServiceInterface
         return true;
     }
 
-    public function isAuthorized(string $route): bool
+    public function isAuthorized(string $resource = ''): bool
     {
         return false;
     }
@@ -55,5 +57,10 @@ class AuthMock implements AuthServiceInterface
     public function getSessionKey(): ?string
     {
         return null;
+    }
+
+    public function passwordNeedsUpdate(): bool
+    {
+        return false;
     }
 }

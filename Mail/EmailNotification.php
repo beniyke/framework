@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Mail;
 
 use Helpers\Data\Data;
-use Mail\Contracts\Mailable;
 use Mail\Core\EmailBuilder;
+use Notify\Contracts\EmailNotifiable;
 
-abstract class EmailNotification implements Mailable
+abstract class EmailNotification implements EmailNotifiable
 {
     protected Data $payload;
 

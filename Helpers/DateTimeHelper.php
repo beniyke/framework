@@ -124,8 +124,6 @@ class DateTimeHelper extends CarbonImmutable
         try {
             return static::parse($date);
         } catch (InvalidArgumentException $e) {
-            logger('error.log')->warning("Failed to parse date string: {$date}", ['exception' => $e]);
-
             return null;
         }
     }

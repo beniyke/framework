@@ -73,32 +73,29 @@ class MySqlGrammar extends Grammar
         return [$sql, $builder->getBindings()];
     }
 
-    public function compileWhereDate(string $column, string $operator, string $value): array
+    protected function compileWhereDate(array $where): string
     {
-        $sql = 'DATE(' . $this->wrap($column) . ") {$operator} ?";
-
-        return [$sql, [$value]];
+        return 'DATE(' . $this->wrap($where['column']) . ") {$where['operator']} ?";
     }
 
-    public function compileWhereTime(string $column, string $operator, string $value): array
+    protected function compileWhereTime(array $where): string
     {
-        $sql = 'TIME(' . $this->wrap($column) . ") {$operator} ?";
-
-        return [$sql, [$value]];
+        return 'TIME(' . $this->wrap($where['column']) . ") {$where['operator']} ?";
     }
 
-    public function compileWhereYear(string $column, int $value): array
+    protected function compileWhereYear(array $where): string
     {
-        $sql = 'YEAR(' . $this->wrap($column) . ') = ?';
-
-        return [$sql, [(string) $value]];
+        return 'YEAR(' . $this->wrap($where['column']) . ") {$where['operator']} ?";
     }
 
-    public function compileWhereDay(string $column, string $operator, string $value): array
+    protected function compileWhereMonth(array $where): string
     {
-        $sql = 'DAYOFMONTH(' . $this->wrap($column) . ") {$operator} ?";
+        return 'MONTH(' . $this->wrap($where['column']) . ") {$where['operator']} ?";
+    }
 
-        return [$sql, [$value]];
+    protected function compileWhereDay(array $where): string
+    {
+        return 'DAYOFMONTH(' . $this->wrap($where['column']) . ") {$where['operator']} ?";
     }
 
     public function compileWhereDayBetween(string $column, string $type, int $start, int $end): string

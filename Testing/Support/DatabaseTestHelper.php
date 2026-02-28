@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Testing\Support;
 
 use App\Models\User;
-use App\Services\Auth\Interfaces\AuthServiceInterface;
+use Core\Contracts\AuthServiceInterface;
 use Core\Ioc\Container;
 use Database\BaseModel;
 use Database\Connection;
@@ -98,19 +98,35 @@ class DatabaseTestHelper
         sort($files);
 
         foreach ($files as $file) {
-            require_once $file;
             $filename = basename($file, '.php');
-
             $className = preg_replace('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '', $filename);
             $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $className)));
 
-            // Try potential namespaced or suffix variants
-            $class = $className;
-            if (!class_exists($class)) {
-                $class = 'Database\\Migrations\\' . $className;
+            // Extract namespace if present
+            $content = file_get_contents($file);
+            $namespace = '';
+            if (preg_match('/namespace\s+([^;]+);/', $content, $matches)) {
+                $namespace = trim($matches[1]);
             }
 
-            if (class_exists($class)) {
+            $namespacedClass = $namespace ? "{$namespace}\\{$className}" : $className;
+
+            if (!class_exists($namespacedClass, false) && !class_exists($className, false)) {
+                require_once $file;
+            }
+
+            // Try potential namespaced or suffix variants
+            $class = class_exists($namespacedClass, false) ? $namespacedClass : null;
+            if (!$class && !class_exists($className, false)) {
+                $variant = 'Database\\Migrations\\' . $className;
+                if (class_exists($variant, false)) {
+                    $class = $variant;
+                }
+            } else {
+                $class = $class ?: $className;
+            }
+
+            if ($class && class_exists($class, false)) {
                 $migration = new $class();
                 if (method_exists($migration, 'up')) {
                     $migration->up();
@@ -136,19 +152,35 @@ class DatabaseTestHelper
         sort($files);
 
         foreach ($files as $file) {
-            require_once $file;
             $filename = basename($file, '.php');
-
             $className = preg_replace('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '', $filename);
             $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $className)));
 
-            // Try potential namespaced or suffix variants
-            $class = $className;
-            if (!class_exists($class)) {
-                $class = 'Database\\Migrations\\' . $className;
+            // Extract namespace if present
+            $content = file_get_contents($file);
+            $namespace = '';
+            if (preg_match('/namespace\s+([^;]+);/', $content, $matches)) {
+                $namespace = trim($matches[1]);
             }
 
-            if (class_exists($class)) {
+            $namespacedClass = $namespace ? "{$namespace}\\{$className}" : $className;
+
+            if (!class_exists($namespacedClass, false) && !class_exists($className, false)) {
+                require_once $file;
+            }
+
+            // Try potential namespaced or suffix variants
+            $class = class_exists($namespacedClass, false) ? $namespacedClass : null;
+            if (!$class && !class_exists($className, false)) {
+                $variant = 'Database\\Migrations\\' . $className;
+                if (class_exists($variant, false)) {
+                    $class = $variant;
+                }
+            } else {
+                $class = $class ?: $className;
+            }
+
+            if ($class && class_exists($class, false)) {
                 $migration = new $class();
                 if (method_exists($migration, 'up')) {
                     $migration->up();
@@ -207,20 +239,31 @@ class DatabaseTestHelper
         sort($files);
 
         foreach ($files as $file) {
-            require_once $file;
             $filename = basename($file, '.php');
 
-            $className = preg_replace('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '', $filename);
-            $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $className)));
-            $namespaced = 'Testing\\Fixtures\\Migrations\\' . $className;
-            $namespacedMigration = $namespaced . 'Migration';
+            // Extract class name from file
+            $className = null;
+            $content = file_get_contents($file);
+            if (preg_match('/class\s+(\w+)/', $content, $matches)) {
+                $className = $matches[1];
+            }
 
-            if (class_exists($namespacedMigration)) {
-                $class = $namespacedMigration;
-            } elseif (class_exists($namespaced)) {
+            if (!$className) {
+                continue;
+            }
+
+            // Using require_once to load the file
+            require_once $file;
+
+            // Try namespaced first if it follows the pattern Testing\Fixtures\Migrations\{ClassName}
+            $namespaced = 'Testing\\Fixtures\\Migrations\\' . $className;
+
+            if (class_exists($namespaced, false)) {
                 $class = $namespaced;
-            } else {
+            } elseif (class_exists($className, false)) {
                 $class = $className;
+            } else {
+                continue;
             }
 
             if (class_exists($class)) {

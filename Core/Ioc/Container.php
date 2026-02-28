@@ -30,6 +30,8 @@ class Container implements ContainerInterface
 
     private array $bindings = [];
 
+    private array $aliases = [];
+
     private array $cache = [];
 
     private array $buildStack = [];
@@ -47,6 +49,22 @@ class Container implements ContainerInterface
     private array $registeredProviders = [];
 
     private array $taggedCache = [];
+
+    private array $baseBindings = [];
+
+    private array $baseAliases = [];
+
+    private array $baseTags = [];
+
+    private array $baseContextual = [];
+
+    private array $baseConventionRules = [];
+
+    private array $baseRegisteredProviders = [];
+
+    private array $baseDeferred = [];
+
+    private array $baseCache = [];
 
     private bool $enablePropertyInjection = true;
 
@@ -81,6 +99,70 @@ class Container implements ContainerInterface
         $this->bind($abstract, $concrete, true);
     }
 
+    public function alias(string $abstract, string $alias): void
+    {
+        $this->aliases[$alias] = $abstract;
+    }
+
+    /**
+     * Flush the container of all bindings and resolved instances.
+     * Note: This is a full flush, use restore() for test isolation.
+     */
+    public function flush(): void
+    {
+        $this->bindings = [];
+        $this->aliases = [];
+        $this->cache = [];
+        $this->buildStack = [];
+        $this->tags = [];
+        $this->contextual = [];
+        $this->deferred = [];
+        $this->reflectionCache = [];
+        $this->dependencyCache = [];
+        $this->registeredProviders = [];
+        $this->taggedCache = [];
+    }
+
+    /**
+     * Take a snapshot of the current container state.
+     */
+    public function snapshot(): void
+    {
+        $this->baseBindings = $this->bindings;
+        $this->baseAliases = $this->aliases;
+        $this->baseTags = $this->tags;
+        $this->baseContextual = $this->contextual;
+        $this->baseConventionRules = $this->conventionRules;
+        $this->baseRegisteredProviders = $this->registeredProviders;
+        $this->baseDeferred = $this->deferred;
+        $this->baseCache = $this->cache;
+    }
+
+    public function clearRegisteredProviders(): void
+    {
+        $this->registeredProviders = [];
+    }
+
+    /**
+     * Restore the container to its snapshotted state.
+     */
+    public function restore(): void
+    {
+        $this->bindings = $this->baseBindings;
+        $this->aliases = $this->baseAliases;
+        $this->tags = $this->baseTags;
+        $this->contextual = $this->baseContextual;
+        $this->conventionRules = $this->baseConventionRules;
+        $this->registeredProviders = $this->baseRegisteredProviders;
+        $this->deferred = $this->baseDeferred;
+
+        $this->cache = $this->baseCache;
+        $this->buildStack = [];
+        $this->reflectionCache = [];
+        $this->dependencyCache = [];
+        $this->taggedCache = [];
+    }
+
     public function forgetCachedInstance(string $abstract): void
     {
         unset($this->cache[$abstract]);
@@ -88,6 +170,8 @@ class Container implements ContainerInterface
 
     public function get(string $id)
     {
+        $id = $this->aliases[$id] ?? $id;
+
         if (isset($this->cache[$id])) {
             return $this->cache[$id];
         }
@@ -278,7 +362,7 @@ class Container implements ContainerInterface
     {
         $cacheKey = ($method instanceof ReflectionMethod)
             ? $method->getDeclaringClass()->getName() . '::' . $method->getName()
-            : 'Closure::' . spl_object_hash($method->getClosure());
+            : ($method->isClosure() ? 'Closure::' . spl_object_hash($method->getClosure()) : 'Function::' . $method->getName());
         if (isset($this->dependencyCache[$cacheKey])) {
             return $this->resolveCachedDependencies($this->dependencyCache[$cacheKey], $givenParameters);
         }
@@ -422,7 +506,19 @@ class Container implements ContainerInterface
                 throw new Exception("Unresolvable dependency: parameter '{$parameter->getName()}' of built-in type '{$type->getName()}' has no default value and no named binding.");
             }
 
-            return $this->get($type->getName());
+            try {
+                return $this->get($type->getName());
+            } catch (Exception $e) {
+                if ($parameter->isDefaultValueAvailable()) {
+                    return $parameter->getDefaultValue();
+                }
+
+                if ($parameter->allowsNull()) {
+                    return null;
+                }
+
+                throw $e;
+            }
         }
 
         if ($type instanceof ReflectionUnionType) {

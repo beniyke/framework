@@ -48,8 +48,6 @@ class HttpServiceProvider extends ServiceProvider
             $config_defaults['samesite']
         );
 
-        $session->start();
-
         $this->container->singleton(Flash::class, function ($container) use ($session) {
             return new Flash($session);
         });

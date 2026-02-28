@@ -14,6 +14,6 @@ namespace Notify\Contracts;
 
 use Mail\Contracts\Mailable;
 
-interface EmailNotifiable extends Mailable, Notifiable
+interface EmailNotifiable extends Mailable
 {
 }

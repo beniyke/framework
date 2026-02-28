@@ -158,10 +158,10 @@ class ViewEngine implements ViewInterface
         ob_start();
 
         try {
-            (static function (string $template, array $data) {
-                extract($data);
-                include $template;
-            })($view_template, $data);
+            (function (string $__template, array $__data) {
+                extract($__data);
+                include $__template;
+            })->call($this, $view_template, $data);
 
             return ltrim(ob_get_clean());
         } catch (Throwable $e) {

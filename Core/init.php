@@ -60,6 +60,7 @@ $app = new Kernel($container, $basePath);
 
 try {
     $app->boot();
+    $container->snapshot();
 } catch (ConfigurationException $e) {
     http_response_code(500);
     echo 'Fatal Configuration Error: ' . $e->getMessage();

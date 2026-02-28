@@ -153,6 +153,12 @@ final class DB
         return new RawExpression($expression, $bindings);
     }
 
+    public static function reset(): void
+    {
+        self::$connections = [];
+        self::$defaultConnectionName = 'default';
+    }
+
     public static function __callStatic(string $method, array $parameters): mixed
     {
         if (method_exists(self::class, $method)) {

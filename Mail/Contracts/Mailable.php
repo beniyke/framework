@@ -14,8 +14,9 @@ namespace Mail\Contracts;
 
 use Helpers\Data\Data;
 use Mail\Core\EmailBuilder;
+use Notify\Contracts\Notifiable;
 
-interface Mailable
+interface Mailable extends Notifiable
 {
     public function toMail(EmailBuilder $builder): Data;
 }

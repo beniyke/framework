@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Database\Schema\Traits;
 
-use Database\Connection;
+use Database\ConnectionInterface;
 use Database\Schema\Grammars\MysqlGrammar;
 use Database\Schema\Grammars\PostgresGrammar;
 use Database\Schema\Grammars\SchemaGrammar;
@@ -21,7 +21,7 @@ use RuntimeException;
 
 trait SchemaGrammarResolver
 {
-    protected function getGrammar(Connection $connection): SchemaGrammar
+    protected function getGrammar(ConnectionInterface $connection): SchemaGrammar
     {
         $driver = $connection->getDriver();
 

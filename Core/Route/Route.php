@@ -125,22 +125,7 @@ class Route
      */
     public static function view(string $path, string $view, array $data = []): RouteInstance
     {
-        return self::get($path, function () use ($view, $data) {
-            $engine = resolve(ViewInterface::class);
-
-            if (str_contains($view, '::')) {
-                [$module, $template] = explode('::', $view, 2);
-                $engine->path(Paths::templatePath(null, $module));
-                $view = $template;
-            } elseif (! FileSystem::isAbsolute($view)) {
-                // If not absolute and no module specified, use default templates path
-                $engine->path(Paths::templatePath());
-            }
-
-            return $engine->template($view)
-                ->data($data)
-                ->render();
-        });
+        return self::get($path, self::viewAction($view, $data));
     }
 
     /**
@@ -169,6 +154,33 @@ class Route
         $instance = new RouteInstance('{fallback_any?}', $action);
         $instance->where('fallback_any', '.*');
         self::$fallbackRoute = $instance;
+    }
+
+    /**
+     * Register a fallback route that directly renders a view.
+     */
+    public static function fallbackView(string $view, array $data = []): void
+    {
+        self::fallback(self::viewAction($view, $data));
+    }
+
+    private static function viewAction(string $view, array $data = []): Closure
+    {
+        return function () use ($view, $data) {
+            $engine = resolve(ViewInterface::class);
+
+            if (str_contains($view, '::')) {
+                [$module, $template] = explode('::', $view, 2);
+                $engine->path(Paths::templatePath(null, $module));
+                $view = $template;
+            } elseif (! FileSystem::isAbsolute($view)) {
+                $engine->path(Paths::templatePath());
+            }
+
+            return $engine->template($view)
+                ->data($data)
+                ->render();
+        };
     }
 
     /**

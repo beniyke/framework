@@ -88,6 +88,13 @@ class ProviderManager
         }
     }
 
+    public function reboot(): void
+    {
+        $this->container->clearRegisteredProviders();
+        $this->isBooted = false;
+        $this->boot();
+    }
+
     public function getLoadedProviderInstances(): array
     {
         $instances = [];

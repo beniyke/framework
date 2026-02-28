@@ -36,13 +36,13 @@ abstract class Grammar
 
     abstract public function compileAggregate(Builder $builder, string $function, array $columns, string $alias): array;
 
-    abstract public function compileWhereDate(string $column, string $operator, string $value): array;
+    abstract protected function compileWhereDate(array $where): string;
 
-    abstract public function compileWhereTime(string $column, string $operator, string $value): array;
+    abstract protected function compileWhereMonth(array $where): string;
 
-    abstract public function compileWhereDay(string $column, string $operator, string $value): array;
+    abstract protected function compileWhereDay(array $where): string;
 
-    abstract public function compileWhereYear(string $column, int $value): array;
+    abstract protected function compileWhereYear(array $where): string;
 
     abstract public function compileInsert(Builder $builder, array $columns, array $valueSets): array;
 
@@ -297,8 +297,8 @@ abstract class Grammar
 
     protected function compileWhereDateBetween(array $where): string
     {
-        [$startSql] = $this->compileWhereDate($where['column'], '>=', $where['start']);
-        [$endSql] = $this->compileWhereDate($where['column'], '<=', $where['end']);
+        $startSql = $this->compileWhereDate(['column' => $where['column'], 'operator' => '>=']);
+        $endSql = $this->compileWhereDate(['column' => $where['column'], 'operator' => '<=']);
 
         return $startSql . ' AND ' . $endSql;
     }

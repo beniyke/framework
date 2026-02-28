@@ -148,7 +148,7 @@ class UrlResolver
             $result = $this->resolveUrlWithSegments();
         }
 
-        if ($result && !($result instanceof RouteMatch && isset($result->error)) && !(is_array($result) && isset($result['error']))) {
+        if ($result && !($result instanceof RouteMatch && isset($result->error)) && !(is_array($result) && (isset($result['error']) || isset($result['redirect'])))) {
             return $result instanceof RouteMatch ? $result : new RouteMatch($result);
         }
 

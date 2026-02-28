@@ -32,6 +32,8 @@ class SessionMiddleware implements MiddlewareInterface
 
     public function handle(Request $request, Response $response, Closure $next): mixed
     {
+        $this->session->start();
+
         if ($this->config->get('session.regenerate')) {
             $this->session->periodicRegenerate();
         }

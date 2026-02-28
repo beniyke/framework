@@ -76,36 +76,39 @@ class SqliteGrammar extends Grammar
         return [$sql, $builder->getBindings()];
     }
 
-    public function compileWhereDate(string $column, string $operator, string $value): array
+    protected function compileWhereDate(array $where): string
     {
-        $wrappedColumn = $this->wrap($column);
-        $sql = "strftime('%Y-%m-%d', {$wrappedColumn}) {$operator} ?";
+        $wrappedColumn = $this->wrap($where['column']);
 
-        return [$sql, [$value]];
+        return "strftime('%Y-%m-%d', {$wrappedColumn}) {$where['operator']} ?";
     }
 
-    public function compileWhereTime(string $column, string $operator, string $value): array
+    protected function compileWhereTime(array $where): string
     {
-        $wrappedColumn = $this->wrap($column);
-        $sql = "strftime('%H:%M:%S', {$wrappedColumn}) {$operator} ?";
+        $wrappedColumn = $this->wrap($where['column']);
 
-        return [$sql, [$value]];
+        return "strftime('%H:%M:%S', {$wrappedColumn}) {$where['operator']} ?";
     }
 
-    public function compileWhereYear(string $column, int $value): array
+    protected function compileWhereYear(array $where): string
     {
-        $wrappedColumn = $this->wrap($column);
-        $sql = "strftime('%Y', {$wrappedColumn}) = ?";
+        $wrappedColumn = $this->wrap($where['column']);
 
-        return [$sql, [(string) $value]];
+        return "strftime('%Y', {$wrappedColumn}) {$where['operator']} ?";
     }
 
-    public function compileWhereDay(string $column, string $operator, string $value): array
+    protected function compileWhereMonth(array $where): string
     {
-        $wrappedColumn = $this->wrap($column);
-        $sql = "strftime('%d', {$wrappedColumn}) {$operator} ?";
+        $wrappedColumn = $this->wrap($where['column']);
 
-        return [$sql, [$value]];
+        return "strftime('%m', {$wrappedColumn}) {$where['operator']} ?";
+    }
+
+    protected function compileWhereDay(array $where): string
+    {
+        $wrappedColumn = $this->wrap($where['column']);
+
+        return "strftime('%d', {$wrappedColumn}) {$where['operator']} ?";
     }
 
     public function compileWhereDayBetween(string $column, string $type, int $start, int $end): string

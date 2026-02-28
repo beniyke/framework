@@ -29,12 +29,18 @@ class CommandMapper
 
     public function resolveCommandName(string $commandName): string
     {
+        $commandName = str_replace('\\', '/', $commandName);
+
         return self::COMMAND_ALIASES[$commandName] ?? $commandName;
     }
 
     public function requiresDatabaseConnection(string $commandName): bool
     {
-        if (config('env') === 'testing') {
+        if (
+            config('env') === 'testing' || config('env') === 'test' ||
+            getenv('APP_ENV') === 'testing' || getenv('APP_ENV') === 'test' ||
+            ($_ENV['APP_ENV'] ?? null) === 'testing' || ($_ENV['APP_ENV'] ?? null) === 'test'
+        ) {
             return true;
         }
 
@@ -45,7 +51,11 @@ class CommandMapper
 
     public function isRunningTest(string $commandName): bool
     {
-        if (config('env') === 'testing') {
+        if (
+            config('env') === 'testing' || config('env') === 'test' ||
+            getenv('APP_ENV') === 'testing' || getenv('APP_ENV') === 'test' ||
+            ($_ENV['APP_ENV'] ?? null) === 'testing' || ($_ENV['APP_ENV'] ?? null) === 'test'
+        ) {
             return true;
         }
 

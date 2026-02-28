@@ -118,6 +118,7 @@ class Event
 
     public static function reset(): void
     {
+        self::clearListeners();
         self::$fake = null;
     }
 }

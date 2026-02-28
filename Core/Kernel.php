@@ -18,6 +18,9 @@ use Core\Contracts\TerminableInterface;
 use Core\Error\ConfigurationException;
 use Core\Error\ErrorHandler;
 use Core\Ioc\ContainerInterface;
+use Core\Middleware\SecurityMiddleware;
+use Core\Middleware\SessionMiddleware;
+use Core\Middleware\SmartValidationMiddleware;
 use Core\Providers\EventServiceProvider;
 use Core\Route\UrlResolver;
 use Core\Services\ConfigServiceInterface;
@@ -33,6 +36,7 @@ use Helpers\Http\Request;
 use Helpers\Http\Response;
 use Helpers\String\Inflector;
 use Mail\Providers\MailServiceProvider;
+use Security\Firewall\Middleware\FirewallMiddleware;
 use Security\Firewall\Providers\FirewallServiceProvider;
 
 class Kernel
@@ -50,6 +54,20 @@ class Kernel
         DeferServiceProvider::class,
         CronServiceProvider::class,
         EventServiceProvider::class,
+    ];
+
+    private array $middlewareGroups = [
+        'web' => [
+            SessionMiddleware::class,
+            SecurityMiddleware::class,
+            FirewallMiddleware::class,
+            SmartValidationMiddleware::class,
+        ],
+        'api' => [
+            SecurityMiddleware::class,
+            FirewallMiddleware::class,
+            SmartValidationMiddleware::class,
+        ],
     ];
 
     public function __construct(ContainerInterface $container, string $appBasePath)
@@ -146,6 +164,11 @@ class Kernel
     public function getContainer(): ContainerInterface
     {
         return $this->container;
+    }
+
+    public function getMiddlewareGroups(): array
+    {
+        return $this->middlewareGroups;
     }
 
     /**

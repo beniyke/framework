@@ -19,9 +19,12 @@ class MiddlewareResolver
 {
     private array $config;
 
-    public function __construct(ConfigServiceInterface $configService)
+    private array $systemGroups;
+
+    public function __construct(ConfigServiceInterface $configService, array $systemGroups = [])
     {
         $this->config = $configService->get('middleware', []);
+        $this->systemGroups = $systemGroups;
     }
 
     /**
@@ -49,7 +52,10 @@ class MiddlewareResolver
 
         // Check if it's a group (e.g., 'web', 'api')
         if (isset($this->config[$middleware])) {
-            return (array) $this->config[$middleware];
+            $systemMiddleware = $this->systemGroups[$middleware] ?? [];
+            $userMiddleware = (array) $this->config[$middleware];
+
+            return array_merge($systemMiddleware, $userMiddleware);
         }
 
         // Assume it's an FQCN or an alias already bound in container

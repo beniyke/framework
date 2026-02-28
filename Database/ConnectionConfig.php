@@ -49,7 +49,7 @@ class ConnectionConfig implements ConnectionConfigInterface
             'connections' => [
                 'sqlite' => [
                     'path' => null,
-                    'database' => 'memory',
+                    'database' => ':memory:',
                     'busy_timeout' => null,
                     'journal_mode' => 'WAL',
                     'synchronous' => null,

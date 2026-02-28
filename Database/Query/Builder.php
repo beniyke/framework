@@ -861,16 +861,12 @@ class Builder
 
     public function whereTime(string $column, string $operator, string $value): self
     {
-        [$sql, $bindings] = $this->grammar->compileWhereTime($column, $operator, $value);
-
-        return $this->whereRaw($sql, $bindings);
+        return $this->addWhere(['column' => $column, 'operator' => $operator, 'value' => $value, 'type' => 'time'], 'AND');
     }
 
     public function whereYear(string $column, int $value): self
     {
-        [$sql, $bindings] = $this->grammar->compileWhereYear($column, $value);
-
-        return $this->whereRaw($sql, $bindings);
+        return $this->addWhere(['column' => $column, 'operator' => '=', 'value' => (string) $value, 'type' => 'year'], 'AND');
     }
 
     public function whereLast(string $unit, int $value, string $column = 'created_at', string $boolean = 'AND'): self

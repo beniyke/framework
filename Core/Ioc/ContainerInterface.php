@@ -117,4 +117,12 @@ interface ContainerInterface
      * @param Closure $closure
      */
     public function extend(string $abstract, Closure $closure): void;
+
+    /**
+     * Aliases an abstract to a new name.
+     *
+     * @param string $abstract
+     * @param string $alias
+     */
+    public function alias(string $abstract, string $alias): void;
 }

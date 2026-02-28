@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace {namespace}\Validations\{validationType};
 
-use App\Core\BaseRequestValidation;
+use Core\BaseRequestValidation;
 use {namespace}\Requests\{requestName}Request;
 
 class {validationName} extends BaseRequestValidation

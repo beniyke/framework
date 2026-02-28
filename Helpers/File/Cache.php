@@ -247,6 +247,15 @@ final class Cache implements CacheInterface
             }
         }
 
+        $tagDir = $this->getCachePath() . DIRECTORY_SEPARATOR . '_tags';
+        if (is_dir($tagDir)) {
+            foreach (glob($tagDir . DIRECTORY_SEPARATOR . '*') as $tagFile) {
+                if (! is_dir($tagFile)) {
+                    FileSystem::delete($tagFile);
+                }
+            }
+        }
+
         return $success;
     }
 

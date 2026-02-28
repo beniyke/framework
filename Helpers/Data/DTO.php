@@ -21,6 +21,7 @@ use Helpers\Data\Contracts\DataTransferObject;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionType;
+use ReflectionUnionType;
 use stdClass;
 
 class DTO implements DataTransferObject
@@ -95,9 +96,22 @@ class DTO implements DataTransferObject
         return $this->errors;
     }
 
-    private function getDefaultValueForType(ReflectionType $type): mixed
+    private function getDefaultValueForType(?ReflectionType $type): mixed
     {
-        if ($type->allowsNull()) {
+        if ($type === null || $type->allowsNull()) {
+            return null;
+        }
+
+        if ($type instanceof ReflectionUnionType) {
+            foreach ($type->getTypes() as $union_type) {
+                if ($union_type instanceof ReflectionNamedType) {
+                    $val = $this->getDefaultValueForNamedType($union_type->getName());
+                    if ($val !== null) {
+                        return $val;
+                    }
+                }
+            }
+
             return null;
         }
 
@@ -105,7 +119,12 @@ class DTO implements DataTransferObject
             return null;
         }
 
-        switch ($type->getName()) {
+        return $this->getDefaultValueForNamedType($type->getName());
+    }
+
+    private function getDefaultValueForNamedType(string $name): mixed
+    {
+        switch ($name) {
             case 'string':
                 return '';
             case 'int':

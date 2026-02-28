@@ -51,6 +51,7 @@ class UpdateCommand extends Command
             ->setDescription('Intelligently updates the framework core based on the installation mode.')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Force update and overwrite files (Standalone mode only)')
             ->addOption('tag', 't', InputOption::VALUE_OPTIONAL, 'Specific version tag to pull (Standalone mode only)')
+            ->addOption('docs', 'd', InputOption::VALUE_NONE, 'Whether to update framework documentation alongside core files')
             ->addOption('ignore-ssl', 'k', InputOption::VALUE_NONE, 'Ignore SSL certificate verification failures');
     }
 
@@ -173,7 +174,13 @@ class UpdateCommand extends Command
             $this->hydrationService->downloadZip($zipUrl, $tempZip);
 
             $io->text('Applying updates...');
-            $results = $this->hydrationService->extract($tempZip, Paths::basePath());
+            // Determine directories to extract
+            $directories = ['System', 'libs'];
+            if ($input->getOption('docs')) {
+                $directories[] = 'docs';
+            }
+
+            $results = $this->hydrationService->extract($tempZip, Paths::basePath(), $directories);
 
             $this->hydrationService->cleanup($tempZip);
 

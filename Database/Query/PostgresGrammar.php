@@ -72,32 +72,29 @@ class PostgresGrammar extends Grammar
         return [$sql, $builder->getBindings()];
     }
 
-    public function compileWhereDate(string $column, string $operator, string $value): array
+    protected function compileWhereDate(array $where): string
     {
-        $sql = "CAST({$this->wrap($column)} AS DATE) {$operator} ?";
-
-        return [$sql, [$value]];
+        return "CAST({$this->wrap($where['column'])} AS DATE) {$where['operator']} ?";
     }
 
-    public function compileWhereTime(string $column, string $operator, string $value): array
+    protected function compileWhereTime(array $where): string
     {
-        $sql = "CAST({$this->wrap($column)} AS TIME) {$operator} ?";
-
-        return [$sql, [$value]];
+        return "CAST({$this->wrap($where['column'])} AS TIME) {$where['operator']} ?";
     }
 
-    public function compileWhereDay(string $column, string $operator, string $value): array
+    protected function compileWhereMonth(array $where): string
     {
-        $sql = "EXTRACT(DAY FROM {$this->wrap($column)}) {$operator} ?";
-
-        return [$sql, [(string) $value]];
+        return "EXTRACT(MONTH FROM {$this->wrap($where['column'])}) {$where['operator']} ?";
     }
 
-    public function compileWhereYear(string $column, int $value): array
+    protected function compileWhereDay(array $where): string
     {
-        $sql = "EXTRACT(YEAR FROM {$this->wrap($column)}) = ?";
+        return "EXTRACT(DAY FROM {$this->wrap($where['column'])}) {$where['operator']} ?";
+    }
 
-        return [$sql, [(string) $value]];
+    protected function compileWhereYear(array $where): string
+    {
+        return "EXTRACT(YEAR FROM {$this->wrap($where['column'])}) {$where['operator']} ?";
     }
 
     public function compileWhereDayBetween(string $column, string $type, int $start, int $end): string

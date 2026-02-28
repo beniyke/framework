@@ -88,7 +88,7 @@ trait RouteTrait
         }
 
         if ($target_middleware) {
-            return $this->config("middleware.$target_middleware") ?? null;
+            return $this->config("middleware.$target_middleware") !== null ? [$target_middleware] : null;
         }
 
         return null;
